@@ -1,41 +1,147 @@
-# vendor/thor2
+# android_vendor_thor2
 
-Additions for a LineageOS GSI on the **ALT AT-M140 "MIVE Style Folder 2"** (codename `thor2`):
-a Korean flip phone with a keypad and an external screen, MediaTek MT6765 (Helio P35).
+Vendor additions for running a **LineageOS GSI** on the **ALT AT-M140 "MIVE Style Folder 2"**
+(codename `thor2`): a Korean flip phone with a physical keypad and an external screen.
 
-Это всё, что нужно своей сборке LineageOS 23.2 (Android 16, `lineage_arm64_bvN4`) поверх
-GSI, чтобы раскладушка работала как кнопочный телефон. Раскладывается в дерево исходников в
-`vendor/thor2`.
+This repository goes in `vendor/thor2` of a LineageOS source tree. It turns a generic
+`arm64_bvN` GSI into something that behaves like a keypad phone. The D-pad and the number keys
+work and wake the screen, the red key ends calls, the lid sleeps and wakes the phone, and the
+soft keys act as Menu and Back.
 
-## Что внутри
+## Device
 
-| Путь | Что это |
+| | |
 |---|---|
-| `keylayout/mtk-kpd.kl` | Клавиатура раскладушки: цифры, `*`, `#`, крестовина и OK, софт-клавиши (левая — Меню, правая — Назад), Домой, Вызов, F1–F3, Камера, крышка (датчик Холла: SLEEP/WAKEUP). Нажатия будят экран. |
-| `keylayout/mtk-pmic-keys.kl` | Красная кнопка — ENDCALL («отбой»: в разговоре завершает вызов, иначе домой/сон; долгое — меню выключения) и громкость. |
-| `keychars/mtk-kpd.kcm` | Generic.kcm из AOSP, DEL с fallback на BACK. |
-| `overlay/framework` | RRO для `android`: крестовина будит экран (`config_wakeOnDpadKeyPress`). |
-| `overlay/lineage` | RRO для LineageOS: аппаратные кнопки Домой/Назад/Меню/громкость, долгое «Меню» — недавние приложения. |
-| `thor2.mk` | Подключает всё это в сборку и выставляет `ro.config.thor2_keypad_focus=true`. |
+| Model | ALT AT-M140, "MIVE Style Folder 2" |
+| Codename | `thor2` |
+| SoC | MediaTek MT6765 (Helio P35) |
+| GPU | PowerVR GE8320 |
+| RAM | 3 GB |
+| Kernel | 5.10 GKI |
+| Stock vendor | Android 12 (VNDK 31), 32-bit Android Go userspace |
+| Form factor | Flip phone, 12-key keypad, D-pad, soft keys, external screen, Hall sensor on the lid |
 
-## Подключение
+## Status
 
-В сборке `thor2.mk` подключался из `vendor/lineage-priv/keys/keys.mk`:
+Built and tested with **LineageOS 23.2 (Android 16)**, target `lineage_arm64_bvN4`, using
+[MisterZtr](https://github.com/MisterZtr)'s GSI manifest and patches. It runs on a 64-bit vendor
+image that carries PowerVR libraries from the TECNO Spark 20C, which has the same SoC and GPU
+driver version.
 
-```make
-$(call inherit-product, vendor/thor2/thor2.mk)
+As of October 2026, the following work: graphics, camera, Wi-Fi, Bluetooth, sensors, modem,
+the keypad and the lid. Calls with a SIM card haven't been tested yet.
+
+## Contents
+
+```
+vendor/thor2/
+├── thor2.mk                        # Product makefile: packages, key files, properties
+├── keylayout/
+│   ├── mtk-kpd.kl                  # Keypad (mtk-kpd driver)
+│   └── mtk-pmic-keys.kl            # PMIC keys: red key, volume
+├── keychars/
+│   └── mtk-kpd.kcm                 # Key character map (AOSP Generic.kcm, DEL falls back to BACK)
+└── overlay/
+    ├── framework/                  # Thor2FrameworkOverlay (RRO for android)
+    └── lineage/                    # Thor2LineageOverlay (RRO for lineageos.platform)
 ```
 
-`thor2.mk` также ссылается на пакет **`ThorSubScreen`** (приложение для внешнего экрана:
-часы, уведомления, плитки, курсор, действия клавиш F1–F3 и Камеры) — его исходников в этом
-репозитории нет. Без него уберите `ThorSubScreen` из `PRODUCT_PACKAGES`.
+## Key map
 
-Кнопки F1–F3, Камера, SOS и крышка доходят до приложения через патчи `frameworks/base`
-(`PhoneWindowManager`), а D-pad до панелей инструментов — через патч `ViewGroup`
-(читает `ro.config.thor2_keypad_focus`). Эти патчи тоже не входят сюда.
+### Keypad (`mtk-kpd.kl`)
 
-## Телефон
+| Scancode | Android key | Wakes the screen | Notes |
+|---:|---|:---:|---|
+| 2 – 11 | `1` … `9`, `0` | ✓ | Number keys |
+| 522 | `STAR` | ✓ | `*` |
+| 523 | `POUND` | ✓ | `#` |
+| 103, 108, 105, 106 | `DPAD_UP/DOWN/LEFT/RIGHT` | ✓ | Wakes through `config_wakeOnDpadKeyPress` |
+| 28 | `ENTER` | ✓ | OK, in the middle of the D-pad |
+| 580 | `MENU` | | Left soft key. A long press opens recent apps |
+| 158 | `BACK` | | Right soft key |
+| 172 | `HOME` | | |
+| 14 | `DEL` | ✓ | Clear. Falls back to `BACK` outside text fields (`.kcm`) |
+| 169 | `CALL` | ✓ | Green key |
+| 59, 60, 61 | `F1`, `F2`, `F3` | ✓ | Contacts, messages, and a third shortcut key. The actions come from ThorSubScreen (see below) |
+| 212 | `CAMERA` | | Short press opens the camera, a long press toggles the flashlight (ThorSubScreen) |
+| 142 / 143 | `SLEEP` / `WAKEUP` | | The lid (Hall sensor) closes / opens |
 
-- 3 ГБ RAM, GPU PowerVR GE8320, ядро 5.10 GKI, vendor от Android 12 (VNDK 31).
-- Сток — 32-битный Android Go; 64-битная система работает на vendor с 64-битными
-  PowerVR-библиотеками от TECNO Spark 20C (тот же SoC и DDK).
+### PMIC keys (`mtk-pmic-keys.kl`)
+
+| Scancode | Android key | Notes |
+|---:|---|---|
+| 116 | `ENDCALL` | Red key. During a call it ends the call. Otherwise it follows `END_BUTTON_BEHAVIOR` (home, sleep, or home then sleep). A long press opens the power menu |
+| 115 | `VOLUME_UP` | |
+
+## Overlays
+
+**`Thor2FrameworkOverlay`** (target `android`)
+
+- `config_wakeOnDpadKeyPress = true`: the D-pad wakes the screen. The keypad sits inside the flip, so it can't be pressed by accident while the lid is closed.
+
+**`Thor2LineageOverlay`** (target `lineageos.platform`)
+
+- `config_deviceHardwareKeys = 71`, which is Home (1) + Back (2) + Menu (4) + Volume (64). These show up in *Settings → System → Buttons*. Camera (32) is left out on purpose, because ThorSubScreen handles it.
+- `config_deviceHardwareWakeKeys = 71`.
+- `config_longPressOnMenuBehavior = 2`: a long press on the left soft key opens recent apps.
+
+`thor2.mk` also sets `ro.config.thor2_keypad_focus=true`, which a `ViewGroup` patch reads (see below).
+
+## Using it
+
+1. Add the repository to your local manifest, e.g. `.repo/local_manifests/thor2.xml`:
+
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <manifest>
+     <remote name="kloploid" fetch="https://github.com/kloploid/" />
+     <project path="vendor/thor2" name="android_vendor_thor2" remote="kloploid" revision="main" />
+   </manifest>
+   ```
+
+2. Inherit `thor2.mk` from a makefile your GSI target already includes:
+
+   ```make
+   $(call inherit-product-if-exists, vendor/thor2/thor2.mk)
+   ```
+
+   The original build pulled it in from `vendor/lineage-priv/keys/keys.mk`, which every signed
+   LineageOS build includes.
+
+3. Sync and build as usual:
+
+   ```bash
+   repo sync vendor/thor2
+   source build/envsetup.sh
+   lunch lineage_arm64_bvN4-bp4a-userdebug
+   m
+   ```
+
+## Not included
+
+These were part of the same build but aren't published here yet:
+
+- **ThorSubScreen** (`packages/apps/ThorSubScreen`) is a platform-signed system app for the
+  external screen. It shows a clock, notifications and toggle tiles, provides a cursor for
+  keypad navigation, and handles F1–F3 and the Camera key. `thor2.mk` lists it in
+  `PRODUCT_PACKAGES`. Remove it from there if you build without it.
+- **`frameworks/base` patches:**
+  - `PhoneWindowManager` forwards the SOS and volume keys to thor2's handler;
+  - `PhoneWindowManager` handles the keypad keys, the lid and a long press on Home;
+  - `ViewGroup` lets D-pad focus reach toolbars that block focus in touch mode, enabled by
+    `ro.config.thor2_keypad_focus`.
+- **`packages/apps/Launcher3` patch:** keypad navigation in the launcher.
+
+Without these patches the key layouts still work, but F1–F3, Camera, SOS and the lid don't
+reach any app, and some toolbars can't be reached with the D-pad.
+
+## Credits
+
+- [LineageOS](https://lineageos.org) and the Android Open Source Project.
+- [MisterZtr](https://github.com/MisterZtr), for the LineageOS 23.2 GSI manifest and patches.
+- [TrebleDroid](https://github.com/TrebleDroid) and phh, for making GSIs work on devices like this one.
+
+## License
+
+`keychars/mtk-kpd.kcm` is derived from AOSP's `Generic.kcm` and stays under the
+[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), as its header says.
