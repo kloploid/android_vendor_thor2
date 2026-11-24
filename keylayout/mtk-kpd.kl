@@ -1,0 +1,43 @@
+# ALT AT-M140 (thor2): клавиатура раскладушки (драйвер mtk-kpd).
+# WAKE — нажатие будит экран (как LS_IS_WAKE_KEY_FORM_KEYCODE в стоке); крестовина будит через
+# config_wakeOnDpadKeyPress, Домой/Назад/Меню — через настройки LineageOS «Кнопки».
+
+key 2     1             WAKE
+key 3     2             WAKE
+key 4     3             WAKE
+key 5     4             WAKE
+key 6     5             WAKE
+key 7     6             WAKE
+key 8     7             WAKE
+key 9     8             WAKE
+key 10    9             WAKE
+key 11    0             WAKE
+key 522   STAR          WAKE
+key 523   POUND         WAKE
+
+# крестовина и OK
+key 103   DPAD_UP
+key 108   DPAD_DOWN
+key 105   DPAD_LEFT
+key 106   DPAD_RIGHT
+key 28    ENTER         WAKE
+
+# левая софт-клавиша — Меню (опции в приложениях, снятие блокировки; долгое — недавние),
+# правая — Назад
+key 580   MENU
+key 158   BACK
+
+key 172   HOME
+key 14    DEL           WAKE
+key 169   CALL          WAKE
+
+# Контакты, Почта/сообщения, (кнопка F3), Камера: действия назначает приложение Thor2
+# (PhoneWindowManager.interceptUnhandledKey → org.thor2.subscreen).
+key 59    F1            WAKE
+key 60    F2            WAKE
+key 61    F3            WAKE
+key 212   CAMERA
+
+# крышка (датчик Холла): закрыта / открыта
+key 142   SLEEP
+key 143   WAKEUP

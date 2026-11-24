@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Домой (1) + Назад (2) + Меню (4, левая софт-клавиша) + громкость (64). Камера (32) не объявлена:
+         её назначает приложение Thor2 (короткое нажатие — камера, долгое — фонарик). -->
+    <integer name="config_deviceHardwareKeys">71</integer>
+    <integer name="config_deviceHardwareWakeKeys">71</integer>
+    <!-- Долгое «Меню» (левая софт-клавиша) — недавние приложения. -->
+    <integer name="config_longPressOnMenuBehavior">2</integer>
+</resources>

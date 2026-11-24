@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Крестовина будит экран (у раскладушки клавиатура внутри: при закрытой крышке не нажать). -->
+    <bool name="config_wakeOnDpadKeyPress">true</bool>
+</resources>

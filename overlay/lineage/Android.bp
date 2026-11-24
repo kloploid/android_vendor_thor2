@@ -1,0 +1,5 @@
+// thor2: аппаратные кнопки для LineageOS (Настройки → Система → Кнопки).
+runtime_resource_overlay {
+    name: "Thor2LineageOverlay",
+    product_specific: true,
+}

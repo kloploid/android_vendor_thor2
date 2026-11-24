@@ -1,0 +1,5 @@
+// thor2: ресурсы фреймворка для кнопочной раскладушки.
+runtime_resource_overlay {
+    name: "Thor2FrameworkOverlay",
+    product_specific: true,
+}

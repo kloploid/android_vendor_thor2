@@ -1,0 +1,6 @@
+# ALT AT-M140 (thor2): кнопки PMIC. Красная кнопка (KEY_POWER) — «отбой» кнопочного телефона:
+# в разговоре — завершить вызов; иначе — по настройке END_BUTTON_BEHAVIOR (домой / сон / домой, затем сон);
+# долгое нажатие — меню выключения (PhoneWindowManager, KEYCODE_ENDCALL).
+
+key 116   ENDCALL       WAKE
+key 115   VOLUME_UP
