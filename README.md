@@ -70,7 +70,7 @@ vendor/thor2/
 | 172 | `HOME` | | |
 | 14 | `DEL` | ✓ | Clear. Falls back to `BACK` outside text fields (`.kcm`) |
 | 169 | `CALL` | ✓ | Green key |
-| 59, 60, 61 | `F1`, `F2`, `F3` | ✓ | Contacts, messages, and a third shortcut key. The actions come from ThorSubScreen (see below) |
+| 59, 60, 61 | `F1`, `F2`, `F3` | ✓ | Contacts, messages, and notifications (a long press on F3 turns on cursor mode). ThorSubScreen assigns these and lets you change them |
 | 212 | `CAMERA` | | Short press opens the camera, a long press toggles the flashlight (ThorSubScreen) |
 | 142 / 143 | `SLEEP` / `WAKEUP` | | The lid (Hall sensor) closes / opens |
 
@@ -170,7 +170,9 @@ build fails without the APKs.
 
 ## Not included
 
-**ThorSubScreen** (`packages/apps/ThorSubScreen`) is a platform-signed system app for the
+This lives in its own repository:
+
+**[ThorSubScreen](https://github.com/kloploid/android_packages_apps_ThorSubScreen)** (`packages/apps/ThorSubScreen`) is a platform-signed system app for the
 external screen. It shows a clock, notifications and toggle tiles, provides a cursor for keypad
 navigation, and handles F1–F3 and the Camera key. `thor2.mk` lists it in `PRODUCT_PACKAGES`.
 Remove it from there if you build without it. Without it, F1–F3, Camera and SOS have nothing to
