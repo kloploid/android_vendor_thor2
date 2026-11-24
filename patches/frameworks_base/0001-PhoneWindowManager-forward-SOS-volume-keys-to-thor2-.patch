@@ -1,0 +1,61 @@
+From 0c6ecc4e443f61d7136bbe9cbebe6f3bb27cd9b7 Mon Sep 17 00:00:00 2001
+From: kloploid <10303425+kloploid@users.noreply.github.com>
+Date: Tue, 6 Oct 2026 12:36:12 +0000
+Subject: [PATCH 1/4] PhoneWindowManager: forward SOS/volume keys to thor2
+ outer screen
+
+When the screen is off, KEYCODE_F4 (SOS button on ALT AT-M140 / thor2) and the
+volume keys are sent as org.thor2.subscreen.action.KEY to org.thor2.subscreen,
+which lights up the outer display. The key itself is not consumed.
+
+Change-Id: I79cdc0d6677551e557ac86fb14fc0df51743642c
+---
+ .../server/policy/PhoneWindowManager.java     | 25 +++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index 69fefe33b..ac5ce8550 100644
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -4975,6 +4975,23 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         mDefaultDisplayPolicy.setHdmiPlugged(plugged, true /* force */);
+     }
+ 
++    private static final String OUTER_SCREEN_PACKAGE = "org.thor2.subscreen";
++    private static final String ACTION_OUTER_SCREEN_KEY = "org.thor2.subscreen.action.KEY";
++    private PowerManager.WakeLock mOuterScreenWakeLock;
++
++    /** Сообщить приложению внешнего экрана о нажатии; wakelock — чтобы успело дойти до сна. */
++    private void notifyOuterScreenKey(int keyCode) {
++        if (mOuterScreenWakeLock == null) {
++            mOuterScreenWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
++                    "PhoneWindowManager.outerScreenKey");
++        }
++        mOuterScreenWakeLock.acquire(3000);
++        mHandler.post(() -> mContext.sendBroadcastAsUser(new Intent(ACTION_OUTER_SCREEN_KEY)
++                .setPackage(OUTER_SCREEN_PACKAGE)
++                .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
++                .putExtra("org.thor2.subscreen.extra.KEYCODE", keyCode), UserHandle.SYSTEM));
++    }
++
+     // TODO(b/117479243): handle it in InputPolicy
+     /** {@inheritDoc} */
+     @Override
+@@ -5037,6 +5054,14 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                     + " policyFlags=" + Integer.toHexString(policyFlags));
+         }
+ 
++        // thor2: SOS (F4) и громкость при погашенном экране будят внешний экран раскладушки
++        // (org.thor2.subscreen). Событие не поглощаем: громкость работает как обычно.
++        if (!interactive && down && !isInjected && event.getRepeatCount() == 0
++                && (keyCode == KeyEvent.KEYCODE_F4 || keyCode == KeyEvent.KEYCODE_VOLUME_UP
++                        || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)) {
++            notifyOuterScreenKey(keyCode);
++        }
++
+         // Basic policy based on interactive state.
+         int result;
+         if (interactive || (isInjected && !isWakeKey)) {
+-- 
+2.43.0
+

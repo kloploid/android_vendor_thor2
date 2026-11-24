@@ -3,7 +3,8 @@
 Vendor additions for running a **LineageOS GSI** on the **ALT AT-M140 "MIVE Style Folder 2"**
 (codename `thor2`): a Korean flip phone with a physical keypad and an external screen.
 
-This repository goes in `vendor/thor2` of a LineageOS source tree. It turns a generic
+This repository goes in `vendor/thor2` of a LineageOS source tree. Together with its patches to
+`frameworks/base` and Launcher3, it turns a generic
 `arm64_bvN` GSI into something that behaves like a keypad phone. The D-pad and the number keys
 work and wake the screen, the red key ends calls, the lid sleeps and wakes the phone, and the
 soft keys act as Menu and Back.
@@ -36,6 +37,10 @@ the keypad and the lid. Calls with a SIM card haven't been tested yet.
 ```
 vendor/thor2/
 ├── thor2.mk                        # Product makefile: packages, key files, properties
+├── patches/
+│   ├── apply.sh                    # Applies the patches below (safe to re-run)
+│   ├── frameworks_base/            # 4 patches: key handling, lid, D-pad focus
+│   └── packages_apps_Launcher3/    # 1 patch: keypad navigation in the launcher
 ├── keylayout/
 │   ├── mtk-kpd.kl                  # Keypad (mtk-kpd driver)
 │   └── mtk-pmic-keys.kl            # PMIC keys: red key, volume
@@ -108,32 +113,38 @@ vendor/thor2/
    The original build pulled it in from `vendor/lineage-priv/keys/keys.mk`, which every signed
    LineageOS build includes.
 
-3. Sync and build as usual:
+3. Apply the patches after every `repo sync`, because syncing drops them. The script skips
+   patches that are already applied:
 
    ```bash
-   repo sync vendor/thor2
+   vendor/thor2/patches/apply.sh .
+   ```
+
+4. Build:
+
+   ```bash
    source build/envsetup.sh
    lunch lineage_arm64_bvN4-bp4a-userdebug
    m
    ```
 
+## Patches
+
+| Repository | Patch | What it does |
+|---|---|---|
+| `frameworks/base` | `0001` PhoneWindowManager: forward SOS/volume keys to thor2 | Hands the SOS and volume keys to the external-screen app |
+| | `0002` PhoneWindowManager: thor2 keypad keys, lid and home long press | Handles the keypad keys, the lid (Hall sensor) and a long press on Home |
+| | `0003` ViewGroup: let D-pad focus reach touchscreenBlocksFocus groups | Toolbars that block focus in touch mode become reachable with the D-pad, when `ro.config.thor2_keypad_focus` is set |
+| | `0004` PhoneFallbackEventHandler: pass camera and call keys through | Camera and Call reach apps instead of being taken by the system |
+| `packages/apps/Launcher3` | `0001` keypad navigation for thor2 flip phone | Moving around the launcher with the keypad |
+
 ## Not included
 
-These were part of the same build but aren't published here yet:
-
-- **ThorSubScreen** (`packages/apps/ThorSubScreen`) is a platform-signed system app for the
-  external screen. It shows a clock, notifications and toggle tiles, provides a cursor for
-  keypad navigation, and handles F1–F3 and the Camera key. `thor2.mk` lists it in
-  `PRODUCT_PACKAGES`. Remove it from there if you build without it.
-- **`frameworks/base` patches:**
-  - `PhoneWindowManager` forwards the SOS and volume keys to thor2's handler;
-  - `PhoneWindowManager` handles the keypad keys, the lid and a long press on Home;
-  - `ViewGroup` lets D-pad focus reach toolbars that block focus in touch mode, enabled by
-    `ro.config.thor2_keypad_focus`.
-- **`packages/apps/Launcher3` patch:** keypad navigation in the launcher.
-
-Without these patches the key layouts still work, but F1–F3, Camera, SOS and the lid don't
-reach any app, and some toolbars can't be reached with the D-pad.
+**ThorSubScreen** (`packages/apps/ThorSubScreen`) is a platform-signed system app for the
+external screen. It shows a clock, notifications and toggle tiles, provides a cursor for keypad
+navigation, and handles F1–F3 and the Camera key. `thor2.mk` lists it in `PRODUCT_PACKAGES`.
+Remove it from there if you build without it. Without it, F1–F3, Camera and SOS have nothing to
+go to.
 
 ## Credits
 

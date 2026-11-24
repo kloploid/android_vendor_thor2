@@ -1,0 +1,40 @@
+From 7b23edb47e7b79353449ac3419911bf6dd22e973 Mon Sep 17 00:00:00 2001
+From: kloploid <10303425+kloploid@users.noreply.github.com>
+Date: Tue, 6 Oct 2026 15:29:28 +0000
+Subject: [PATCH 3/4] ViewGroup: let D-pad focus reach touchscreenBlocksFocus
+ groups on thor2
+
+With ro.config.thor2_keypad_focus=true, toolbars and tabs no longer block focus on a
+touchscreen device, so the keypad can reach them (like the stock firmware did).
+
+Change-Id: I677e441702397a884ecccaf0444c72ae6047fb4c
+---
+ core/java/android/view/ViewGroup.java | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/core/java/android/view/ViewGroup.java b/core/java/android/view/ViewGroup.java
+index 071a4bd1a..e170faa3a 100644
+--- a/core/java/android/view/ViewGroup.java
++++ b/core/java/android/view/ViewGroup.java
+@@ -1441,7 +1441,18 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
+         return (mGroupFlags & FLAG_TOUCHSCREEN_BLOCKS_FOCUS) != 0;
+     }
+ 
++    /**
++     * thor2 (кнопочная раскладушка): ro.config.thor2_keypad_focus=true — не блокировать фокус
++     * в touchscreenBlocksFocus-группах (панели инструментов, вкладки), чтобы крестовина до них
++     * доходила, как LS_DISABLE_TOUCH_SCREEN_BLOCK_FOCUS в стоковой прошивке.
++     */
++    private static final boolean sThor2KeypadFocus =
++            android.os.SystemProperties.getBoolean("ro.config.thor2_keypad_focus", false);
++
+     boolean shouldBlockFocusForTouchscreen() {
++        if (sThor2KeypadFocus) {
++            return false;
++        }
+         // There is a special case for keyboard-navigation clusters. We allow cluster navigation
+         // to jump into blockFocusForTouchscreen ViewGroups which are clusters. Once in the
+         // cluster, focus is free to move around within it.
+-- 
+2.43.0
+

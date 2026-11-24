@@ -1,0 +1,79 @@
+From 1d0cf4de789da14df4887d488b6e5b5f11e5b6f4 Mon Sep 17 00:00:00 2001
+From: kloploid <10303425+kloploid@users.noreply.github.com>
+Date: Tue, 6 Oct 2026 17:22:13 +0000
+Subject: [PATCH] Launcher3: keypad navigation for thor2 flip phone
+
+On the home screen, digits, * and # open the dialer with that character, and
+D-pad down opens All Apps when there is nothing further down to focus.
+
+Change-Id: I66b7f2ce5035a0275becfd3072853febe22aa8fe
+---
+ .../util/KeyboardShortcutsDelegate.java       | 45 +++++++++++++++++++
+ 1 file changed, 45 insertions(+)
+
+diff --git a/src/com/android/launcher3/util/KeyboardShortcutsDelegate.java b/src/com/android/launcher3/util/KeyboardShortcutsDelegate.java
+index 3857c66..1c52cd8 100644
+--- a/src/com/android/launcher3/util/KeyboardShortcutsDelegate.java
++++ b/src/com/android/launcher3/util/KeyboardShortcutsDelegate.java
+@@ -110,6 +110,10 @@ public class KeyboardShortcutsDelegate {
+      * @see android.view.KeyEvent
+      */
+     public Boolean onKeyDown(int keyCode, KeyEvent event) {
++        Boolean keypad = onKeypadKeyDown(keyCode, event);
++        if (keypad != null) {
++            return keypad;
++        }
+         // Ignore escape if pressed in conjunction with any modifier keys.
+         if (keyCode == KeyEvent.KEYCODE_ESCAPE && event.hasNoModifiers()) {
+             AbstractFloatingView topView = AbstractFloatingView.getTopOpenView(mLauncher);
+@@ -135,6 +139,47 @@ public class KeyboardShortcutsDelegate {
+         return null;
+     }
+ 
++    /**
++     * thor2 (кнопочная раскладушка): на рабочем столе цифры, * и # открывают набор номера,
++     * а «вниз», когда ниже фокусу идти некуда, открывает список всех приложений.
++     * Launcher.onKeyDown вызывается до перемещения фокуса крестовиной, поэтому «вниз»
++     * перехватывается только там, где FocusFinder ничего ниже не находит.
++     */
++    private Boolean onKeypadKeyDown(int keyCode, KeyEvent event) {
++        if (!event.hasNoModifiers() || !mLauncher.isInState(NORMAL)
++                || AbstractFloatingView.getTopOpenView(mLauncher) != null
++                || mLauncher.getWorkspace().isSwitchingState()) {
++            return null;
++        }
++        String dial = null;
++        if (keyCode >= KeyEvent.KEYCODE_0 && keyCode <= KeyEvent.KEYCODE_9) {
++            dial = String.valueOf(keyCode - KeyEvent.KEYCODE_0);
++        } else if (keyCode == KeyEvent.KEYCODE_STAR) {
++            dial = "*";
++        } else if (keyCode == KeyEvent.KEYCODE_POUND) {
++            dial = "#";
++        }
++        if (dial != null) {
++            try {
++                mLauncher.startActivity(new android.content.Intent(android.content.Intent.ACTION_DIAL,
++                        android.net.Uri.fromParts("tel", dial, null))
++                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK));
++            } catch (android.content.ActivityNotFoundException e) {
++                return null;
++            }
++            return true;
++        }
++        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN && event.getRepeatCount() == 0) {
++            android.view.View focused = mLauncher.getCurrentFocus();
++            if (focused != null && android.view.FocusFinder.getInstance().findNextFocus(
++                    mLauncher.getDragLayer(), focused, android.view.View.FOCUS_DOWN) == null) {
++                mLauncher.getStateManager().goToState(ALL_APPS);
++                return true;
++            }
++        }
++        return null;
++    }
++
+     /**
+      * Handle key up event.
+      * @param keyCode code of the key being pressed.
+-- 
+2.43.0
+

@@ -1,0 +1,121 @@
+From 81c056924281ec69fa0194c6c69d9012c81129cc Mon Sep 17 00:00:00 2001
+From: kloploid <10303425+kloploid@users.noreply.github.com>
+Date: Tue, 6 Oct 2026 15:29:27 +0000
+Subject: [PATCH 2/4] PhoneWindowManager: thor2 keypad keys, lid and home
+ long press
+
+Route unhandled Contacts (F1), Mail (F2), F3, Camera and Call keys, and digits on an
+insecure keyguard, to org.thor2.subscreen, which runs the action assigned to the key.
+Forward lid close/open (KEYCODE_SLEEP/WAKEUP) so the app can end/answer calls.
+Long press on Home toggles the notification shade unless thor2_home_long_press_shade=0.
+
+Change-Id: Icfe6d1e6fbab7e951ffdc275bb8d5b2f1843b812
+---
+ .../server/policy/PhoneWindowManager.java     | 61 +++++++++++++++++--
+ 1 file changed, 55 insertions(+), 6 deletions(-)
+
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index ac5ce8550..424ea3cf4 100644
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -2448,7 +2448,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                     preloadRecentApps();
+                 }
+             } else if (longPress) {
+-                if (!keyguardOn && !mHomeConsumed &&
++                if (!keyguardOn && !mHomeConsumed && thor2HomeLongPressShade()) {
++                    mHomePressed = true;
++                    performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, "Home - Long Press");
++                    toggleNotificationPanel();
++                    mHomeConsumed = true;
++                } else if (!keyguardOn && !mHomeConsumed &&
+                         mHomeLongPressAction != Action.NOTHING) {
+                     if (mHomeLongPressAction != Action.APP_SWITCH) {
+                         cancelPreloadRecentApps();
+@@ -4418,6 +4423,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+             sendSystemKeyToStatusBarAsync(event);
+             return true;
+         }
++        if (isThor2UnhandledKey(keyCode)) {
++            if (event.getRepeatCount() == 0) {
++                notifyThor2Key(event, THOR2_SOURCE_UNHANDLED);
++            }
++            return true;
++        }
+         return false;
+     }
+ 
+@@ -4977,19 +4988,53 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+ 
+     private static final String OUTER_SCREEN_PACKAGE = "org.thor2.subscreen";
+     private static final String ACTION_OUTER_SCREEN_KEY = "org.thor2.subscreen.action.KEY";
++    /** Откуда событие: экран погашен (SOS/громкость) / необработанная клавиша / крышка. */
++    private static final int THOR2_SOURCE_SCREEN_OFF = 0;
++    private static final int THOR2_SOURCE_UNHANDLED = 1;
++    private static final int THOR2_SOURCE_LID = 2;
+     private PowerManager.WakeLock mOuterScreenWakeLock;
+ 
+-    /** Сообщить приложению внешнего экрана о нажатии; wakelock — чтобы успело дойти до сна. */
+-    private void notifyOuterScreenKey(int keyCode) {
++    /**
++     * Передать нажатие приложению thor2 (внешний экран, назначения кнопок, ответ крышкой);
++     * wakelock — чтобы событие успело дойти до сна.
++     */
++    private void notifyThor2Key(KeyEvent event, int source) {
+         if (mOuterScreenWakeLock == null) {
+             mOuterScreenWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                     "PhoneWindowManager.outerScreenKey");
+         }
+         mOuterScreenWakeLock.acquire(3000);
+-        mHandler.post(() -> mContext.sendBroadcastAsUser(new Intent(ACTION_OUTER_SCREEN_KEY)
++        final Intent intent = new Intent(ACTION_OUTER_SCREEN_KEY)
+                 .setPackage(OUTER_SCREEN_PACKAGE)
+                 .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
+-                .putExtra("org.thor2.subscreen.extra.KEYCODE", keyCode), UserHandle.SYSTEM));
++                .putExtra("org.thor2.subscreen.extra.KEYCODE", event.getKeyCode())
++                .putExtra("org.thor2.subscreen.extra.ACTION", event.getAction())
++                .putExtra("org.thor2.subscreen.extra.DOWN_TIME", event.getDownTime())
++                .putExtra("org.thor2.subscreen.extra.SOURCE", source);
++        mHandler.post(() -> mContext.sendBroadcastAsUser(intent, UserHandle.SYSTEM));
++    }
++
++    /**
++     * Необработанные приложением клавиши, которые назначает приложение thor2: Контакты (F1),
++     * Почта (F2), F3, Камера, зелёная.
++     */
++    private boolean isThor2UnhandledKey(int keyCode) {
++        switch (keyCode) {
++            case KeyEvent.KEYCODE_F1:
++            case KeyEvent.KEYCODE_F2:
++            case KeyEvent.KEYCODE_F3:
++            case KeyEvent.KEYCODE_CAMERA:
++            case KeyEvent.KEYCODE_CALL:
++                return true;
++            default:
++                return false;
++        }
++    }
++
++    /** Долгое «Домой» открывает шторку (как в стоке); выключается thor2_home_long_press_shade=0. */
++    private boolean thor2HomeLongPressShade() {
++        return Settings.Global.getInt(mContext.getContentResolver(),
++                "thor2_home_long_press_shade", 1) == 1;
+     }
+ 
+     // TODO(b/117479243): handle it in InputPolicy
+@@ -5059,7 +5104,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         if (!interactive && down && !isInjected && event.getRepeatCount() == 0
+                 && (keyCode == KeyEvent.KEYCODE_F4 || keyCode == KeyEvent.KEYCODE_VOLUME_UP
+                         || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)) {
+-            notifyOuterScreenKey(keyCode);
++            notifyThor2Key(event, THOR2_SOURCE_SCREEN_OFF);
++        }
++        if (down && !isInjected && event.getRepeatCount() == 0
++                && (keyCode == KeyEvent.KEYCODE_SLEEP || keyCode == KeyEvent.KEYCODE_WAKEUP)) {
++            notifyThor2Key(event, THOR2_SOURCE_LID);
+         }
+ 
+         // Basic policy based on interactive state.
+-- 
+2.43.0
+
