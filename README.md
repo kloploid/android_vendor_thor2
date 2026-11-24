@@ -37,6 +37,9 @@ the keypad and the lid. Calls with a SIM card haven't been tested yet.
 ```
 vendor/thor2/
 ├── thor2.mk                        # Product makefile: packages, key files, properties
+├── apps/
+│   ├── fetch.py                    # Downloads the NineTailsFlip apps' latest releases
+│   └── Android.bp                  # Preinstalls them (presigned, in /product)
 ├── patches/
 │   ├── apply.sh                    # Applies the patches below (safe to re-run)
 │   ├── frameworks_base/            # 4 patches: key handling, lid, D-pad focus
@@ -83,6 +86,13 @@ vendor/thor2/
 **`Thor2FrameworkOverlay`** (target `android`)
 
 - `config_wakeOnDpadKeyPress = true`: the D-pad wakes the screen. The keypad sits inside the flip, so it can't be pressed by accident while the lid is closed.
+- **The Nine look for what's left of AOSP:**
+  - dark theme by default (`config_defaultNightMode = 2`; this applies to fresh installs only);
+  - the monospace system font (`monospace`, i.e. DroidSansMono, which has Cyrillic);
+  - pure black backgrounds, dialogs and surfaces, with a white accent instead of a colour taken from the wallpaper.
+
+  The palette follows [nine-core](https://github.com/NineTailsFlip/nine-core)'s `Palette`.
+- `config_defaultDialer` / `config_defaultSms`: P9 and M9 (see below) are the default phone and SMS apps.
 
 **`Thor2LineageOverlay`** (target `lineageos.platform`)
 
@@ -91,6 +101,25 @@ vendor/thor2/
 - `config_longPressOnMenuBehavior = 2`: a long press on the left soft key opens recent apps.
 
 `thor2.mk` also sets `ro.config.thor2_keypad_focus=true`, which a `ViewGroup` patch reads (see below).
+
+## Preinstalled apps
+
+`apps/` puts [NineTailsFlip](https://github.com/NineTailsFlip)'s keypad apps into `/product`:
+
+| App | What it is |
+|---|---|
+| [TG9](https://github.com/NineTailsFlip/tg9) | Telegram |
+| [G9](https://github.com/NineTailsFlip/g9) | Gallery |
+| [L9](https://github.com/NineTailsFlip/l9) | Launcher. Android asks which home app to use the first time Home is pressed |
+| [C9](https://github.com/NineTailsFlip/c9) | Calendars and contacts |
+| [P9](https://github.com/NineTailsFlip/p9) | Phone, the default dialer |
+| [M9](https://github.com/NineTailsFlip/m9) | Messages, the default SMS app |
+
+`apps/fetch.py` downloads each app's latest GitHub release into `apps/prebuilt/` (git-ignored)
+and checks it against the release's `update.json`. For TG9 it takes the `arm64-v8a` APK. The
+APKs keep their release signature (`presigned`), so the preinstalled copies update from GitHub
+through the apps' own updater, like any installed copy. Run `fetch.py` before building; the
+build fails without the APKs.
 
 ## Using it
 
@@ -114,10 +143,11 @@ vendor/thor2/
    LineageOS build includes.
 
 3. Apply the patches after every `repo sync`, because syncing drops them. The script skips
-   patches that are already applied:
+   patches that are already applied. Then fetch the apps:
 
    ```bash
    vendor/thor2/patches/apply.sh .
+   vendor/thor2/apps/fetch.py
    ```
 
 4. Build:

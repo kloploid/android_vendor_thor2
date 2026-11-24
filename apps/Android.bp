@@ -1,0 +1,68 @@
+// NineTailsFlip's apps, preinstalled. The APKs come from fetch.py (latest GitHub releases) and
+// keep their own release signature (presigned), so the copies in the image update from GitHub.
+
+// TG9: Telegram.
+android_app_import {
+    name: "NineTG9",
+    apk: "prebuilt/tg9.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// G9: gallery.
+android_app_import {
+    name: "NineG9",
+    apk: "prebuilt/g9.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// L9: launcher.
+android_app_import {
+    name: "NineL9",
+    apk: "prebuilt/l9.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// C9: calendars and contacts.
+android_app_import {
+    name: "NineC9",
+    apk: "prebuilt/c9.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// P9: phone.
+android_app_import {
+    name: "NineP9",
+    apk: "prebuilt/p9.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// M9: messages.
+android_app_import {
+    name: "NineM9",
+    apk: "prebuilt/m9.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}

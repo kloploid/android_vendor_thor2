@@ -4,6 +4,16 @@ PRODUCT_PACKAGES += \
     Thor2FrameworkOverlay \
     Thor2LineageOverlay
 
+# Приложения NineTailsFlip (apps/: последние релизы с GitHub, apps/fetch.py). P9 и M9 — звонки и SMS
+# по умолчанию (overlay/framework); L9 — рабочий стол на выбор при первом нажатии «Домой».
+PRODUCT_PACKAGES += \
+    NineTG9 \
+    NineG9 \
+    NineL9 \
+    NineC9 \
+    NineP9 \
+    NineM9
+
 PRODUCT_COPY_FILES += \
     vendor/thor2/keylayout/mtk-kpd.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/mtk-kpd.kl \
     vendor/thor2/keylayout/mtk-pmic-keys.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/mtk-pmic-keys.kl \

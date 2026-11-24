@@ -2,4 +2,18 @@
 <resources>
     <!-- Крестовина будит экран (у раскладушки клавиатура внутри: при закрытой крышке не нажать). -->
     <bool name="config_wakeOnDpadKeyPress">true</bool>
+
+    <!-- Тема Nine для всего, что остаётся от AOSP: тёмная по умолчанию (UiModeManager.MODE_NIGHT_YES,
+         действует на новых установках; на уже настроенном телефоне — Настройки → Экран → Тёмная тема). -->
+    <integer name="config_defaultNightMode">2</integer>
+
+    <!-- Моноширинный шрифт, как у приложений Nine (DroidSansMono, с кириллицей). -->
+    <string name="config_headlineFontFamily" translatable="false">monospace</string>
+    <string name="config_headlineFontFamilyMedium" translatable="false">monospace</string>
+    <string name="config_bodyFontFamily" translatable="false">monospace</string>
+    <string name="config_bodyFontFamilyMedium" translatable="false">monospace</string>
+
+    <!-- Звонки и SMS по умолчанию — P9 и M9 (apps/). -->
+    <string name="config_defaultDialer" translatable="false">io.github.ninetailsflip.p9</string>
+    <string name="config_defaultSms" translatable="false">io.github.ninetailsflip.m9</string>
 </resources>
