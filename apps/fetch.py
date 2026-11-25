@@ -17,7 +17,7 @@ import time
 import urllib.request
 
 # setup9 is the first-time setup: the build re-signs it with the platform key (Android.bp).
-APPS = ["tg9", "g9", "l9", "c9", "p9", "m9", "setup9"]
+APPS = ["tg9", "g9", "l9", "c9", "p9", "m9", "k9", "setup9"]
 ABI = "arm64-v8a"
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "prebuilt")

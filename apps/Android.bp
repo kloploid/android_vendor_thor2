@@ -79,6 +79,19 @@ android_app_import {
     },
 }
 
+// K9: the keyboard (Traditional T9 on nine-core). Setup makes it the keyboard in use.
+android_app_import {
+    name: "NineK9",
+    apk: "prebuilt/k9.apk",
+    presigned: true,
+    // Signed with v2/v3 by their release builds: Soong must not repack them.
+    preprocessed: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
 // Setup: the first-time setup in the Nine suite's look, in place of LineageSetupWizard. Unlike
 // the apps above it's re-signed here with the platform key (it sets the system's language, time,
 // Wi-Fi and lock), so it updates only with the image.

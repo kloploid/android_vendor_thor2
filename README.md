@@ -114,11 +114,15 @@ vendor/thor2/
 | [C9](https://github.com/NineTailsFlip/c9) | Calendars and contacts |
 | [P9](https://github.com/NineTailsFlip/p9) | Phone, the default dialer |
 | [M9](https://github.com/NineTailsFlip/m9) | Messages, the default SMS app |
+| [K9](https://github.com/NineTailsFlip/k9) | Keyboard (Traditional T9 on nine-core), the keyboard in use from the first screen |
+| [Setup](https://github.com/NineTailsFlip/setup9) | The first-time setup, in place of LineageSetupWizard: language, Wi-Fi, date and time, PIN, and the look of every Nine app |
 
 `apps/fetch.py` downloads each app's latest GitHub release into `apps/prebuilt/` (git-ignored)
 and checks it against the release's `update.json`. For TG9 it takes the `arm64-v8a` APK. The
 APKs keep their release signature (`presigned`), so the preinstalled copies update from GitHub
-through the apps' own updater, like any installed copy. Run `fetch.py` before building; the
+through the apps' own updater, like any installed copy - all but Setup, which the build re-signs
+with the platform key as a privileged app (it sets the system's language, time, Wi-Fi and lock;
+`privapp-permissions-nine-setup.xml` lists what it may), so it updates only with the image. Run `fetch.py` before building; the
 build fails without the APKs.
 
 ## Using it

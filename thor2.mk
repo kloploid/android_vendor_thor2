@@ -12,10 +12,12 @@ PRODUCT_PACKAGES += \
     NineL9 \
     NineC9 \
     NineP9 \
-    NineM9
+    NineM9 \
+    NineK9
 
 # Первая настройка в стиле Nine вместо LineageSetupWizard (apps/Android.bp: overrides). Шрифт и
-# полосу подсказок, выбранные в ней, подхватывают все приложения Nine (nine-core SetupChoices).
+# полосу подсказок, выбранные в ней, подхватывают все приложения Nine (nine-core SetupChoices);
+# клавиатурой она с первого экрана делает K9 (NineK9).
 PRODUCT_PACKAGES += \
     NineSetup
 
