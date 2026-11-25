@@ -150,3 +150,25 @@ prebuilt_etc {
     sub_dir: "permissions",
     product_specific: true,
 }
+
+// The lock screen in the Nine look (lock9): shown over the keyguard, which stays the security
+// boundary. Platform-signed and privileged (it checks the PIN through LockSettingsService and asks
+// SystemUI to finish the keyguard: frameworks_base 0006), persistent and direct-boot aware.
+android_app_import {
+    name: "NineLock",
+    apk: "prebuilt/lock9.apk",
+    certificate: "platform",
+    privileged: true,
+    product_specific: true,
+    required: ["privapp-permissions-nine-lock.xml"],
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+prebuilt_etc {
+    name: "privapp-permissions-nine-lock.xml",
+    src: "privapp-permissions-nine-lock.xml",
+    sub_dir: "permissions",
+    product_specific: true,
+}

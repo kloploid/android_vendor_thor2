@@ -28,6 +28,15 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     NineSettings
 
+# Экран блокировки в стиле Nine (lock9) поверх keyguard: PIN проверяет сам, через LockSettingsService,
+# а keyguard снимает SystemUI по его сигналу (patches/frameworks_base 0006). «Домой» на нём ничего
+# не делает (0007, по ro.config.thor2_lockscreen). Без него — обычный экран блокировки.
+PRODUCT_PACKAGES += \
+    NineLock
+
+PRODUCT_SYSTEM_PROPERTIES += \
+    ro.config.thor2_lockscreen=io.github.ninetailsflip.lock
+
 PRODUCT_COPY_FILES += \
     vendor/thor2/keylayout/mtk-kpd.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/mtk-kpd.kl \
     vendor/thor2/keylayout/mtk-pmic-keys.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/mtk-pmic-keys.kl \

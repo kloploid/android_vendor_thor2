@@ -42,7 +42,7 @@ vendor/thor2/
 │   └── Android.bp                  # Preinstalls them (presigned, in /product)
 ├── patches/
 │   ├── apply.sh                    # Applies the patches below (safe to re-run)
-│   ├── frameworks_base/            # 5 patches: key handling, lid, D-pad focus, Recents
+│   ├── frameworks_base/            # 7 patches: key handling, lid, D-pad focus, Recents, lock screen
 │   └── packages_apps_Launcher3/    # 1 patch: keypad navigation in the launcher
 ├── keylayout/
 │   ├── mtk-kpd.kl                  # Keypad (mtk-kpd driver)
@@ -118,14 +118,15 @@ vendor/thor2/
 | [M9](https://github.com/NineTailsFlip/m9) | Messages, the default SMS app |
 | [K9](https://github.com/NineTailsFlip/k9) | Keyboard (Traditional T9 on nine-core), the keyboard in use from the first screen |
 | [Setup](https://github.com/NineTailsFlip/setup9) | The first-time setup, in place of LineageSetupWizard: language, Wi-Fi, K9's layouts, date and time, PIN, and the look of every Nine app |
+| [Lock](https://github.com/NineTailsFlip/lock9) | The lock screen in the Nine look, over the keyguard (which stays the security boundary): it checks the PIN itself and SystemUI finishes the keyguard on its signal (patch `0006`) |
 | [Settings](https://github.com/NineTailsFlip/settings9) | The phone's settings in the Nine look; it answers `android.settings.*` above the stock Settings app, which stays, without its icon, for the system's own dialogs and the pages not ported yet |
 
 `apps/fetch.py` downloads each app's latest GitHub release into `apps/prebuilt/` (git-ignored)
 and checks it against the release's `update.json`. For TG9 it takes the `arm64-v8a` APK. The
 APKs keep their release signature (`presigned`), so the preinstalled copies update from GitHub
-through the apps' own updater, like any installed copy - all but Setup and Settings, which the build re-signs
+through the apps' own updater, like any installed copy - all but Setup, Settings and Lock, which the build re-signs
 with the platform key as privileged apps (they set the system's language, time, Wi-Fi, lock and
-the rest; `privapp-permissions-nine-setup.xml` and `-nine-settings.xml` list what they may), so they update only with the image. Run `fetch.py` before building; the
+the rest; `privapp-permissions-nine-setup.xml`, `-nine-settings.xml` and `-nine-lock.xml` list what they may), so they update only with the image. Run `fetch.py` before building; the
 build fails without the APKs.
 
 ## Using it
@@ -174,6 +175,8 @@ build fails without the APKs.
 | | `0003` ViewGroup: let D-pad focus reach touchscreenBlocksFocus groups | Toolbars that block focus in touch mode become reachable with the D-pad, when `ro.config.thor2_keypad_focus` is set |
 | | `0004` PhoneFallbackEventHandler: pass camera and call keys through | Camera and Call reach apps instead of being taken by the system |
 | | `0005` PhoneWindowManager: open the launcher's own recents screen | The Recents key starts the activity `ro.config.thor2_recents` names (L9's), since SystemUI has no Quickstep to show them |
+| | `0006` SystemUI: let the thor2 lock screen app dismiss the keyguard | KeyguardViewMediator finishes the keyguard on `org.thor2.keyguard.action.UNLOCK` from an app holding `ACCESS_KEYGUARD_SECURE_STORAGE` (signature-only): Lock, after it checked the PIN |
+| | `0007` PhoneWindowManager: Home does nothing on the thor2 lock screen | With `ro.config.thor2_lockscreen`'s app focused over the keyguard, Home is ignored instead of uncovering the stock keyguard |
 | `packages/apps/Launcher3` | `0001` keypad navigation for thor2 flip phone | Moving around the launcher with the keypad (kept for builds that still include Launcher3; this image uses L9) |
 
 ## Not included

@@ -1,0 +1,62 @@
+From 4a734f662defc2dada0095954b0c443a24a4a613 Mon Sep 17 00:00:00 2001
+From: kloploid <10303425+kloploid@users.noreply.github.com>
+Date: Thu, 26 Nov 2026 00:34:07 +0200
+Subject: [PATCH] PhoneWindowManager: Home does nothing on the thor2 lock
+ screen
+
+The thor2 lock screen is an app drawn over the keyguard, so the keyguard
+counts as occluded and Home would leave it, uncovering the stock
+keyguard behind. While the package ro.config.thor2_lockscreen names has
+the focus over an occluded keyguard, Home is ignored, as on the stock
+lock screen.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Change-Id: Ib275b48c717f92599b58bdce7485be87fd8a2459
+---
+ .../server/policy/PhoneWindowManager.java        | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index 269f489b9..83ff40efb 100644
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -4501,6 +4501,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+ 
+     @Override
+     public void onDefaultDisplayFocusChangedLw(WindowState newFocus) {
++        mThor2FocusedPackage = newFocus != null ? newFocus.getOwningPackage() : null;
+         if (mDisplayFoldController != null) {
+             mDisplayFoldController.onDefaultDisplayFocusChanged(
+                     newFocus != null ? newFocus.getOwningPackage() : null);
+@@ -4793,6 +4794,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                 return;
+             }
+ 
++            if (isKeyguardOccluded() && thor2LockScreenFocused()) {
++                // thor2: the Nine lock screen app is the lock screen; Home does nothing on it, as
++                // on the stock one, instead of uncovering the keyguard behind it.
++                return;
++            }
++
+             if (!isKeyguardOccluded() && mKeyguardDelegate.isInputRestricted()) {
+                 // when in keyguard restricted mode, must first verify unlock
+                 // before launching home
+@@ -5063,6 +5070,15 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         }
+     }
+ 
++    /** The package owning the focused window on the default display (onDefaultDisplayFocusChangedLw). */
++    private volatile String mThor2FocusedPackage;
++
++    /** The thor2 lock screen app (ro.config.thor2_lockscreen, a package) has the focus. */
++    private boolean thor2LockScreenFocused() {
++        String lockScreen = SystemProperties.get("ro.config.thor2_lockscreen", "");
++        return !lockScreen.isEmpty() && lockScreen.equals(mThor2FocusedPackage);
++    }
++
+     /** Долгое «Домой» открывает шторку (как в стоке); выключается thor2_home_long_press_shade=0. */
+     private boolean thor2HomeLongPressShade() {
+         return Settings.Global.getInt(mContext.getContentResolver(),
+-- 
+2.43.0
+

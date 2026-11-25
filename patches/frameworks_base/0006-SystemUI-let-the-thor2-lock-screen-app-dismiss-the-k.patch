@@ -1,0 +1,64 @@
+From 27af264b1927290a65ce14fdfaa8fb9d70d7e3d2 Mon Sep 17 00:00:00 2001
+From: kloploid <10303425+kloploid@users.noreply.github.com>
+Date: Thu, 26 Nov 2026 00:32:47 +0200
+Subject: [PATCH] SystemUI: let the thor2 lock screen app dismiss the keyguard
+
+thor2 draws its own lock screen (a platform-signed app shown over the
+keyguard) that checks the PIN through LockSettingsService, as the
+bouncer does. KeyguardViewMediator now takes an
+org.thor2.keyguard.action.UNLOCK broadcast from an app holding
+ACCESS_KEYGUARD_SECURE_STORAGE (signature-only) and finishes the
+keyguard, as the bouncer does after a correct PIN. Anything else still
+meets the stock keyguard.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Change-Id: I906d4a5cedc1d4bc0d8bf90c48b126b4fc08b4b8
+---
+ .../keyguard/KeyguardViewMediator.java        | 24 +++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/packages/SystemUI/src/com/android/systemui/keyguard/KeyguardViewMediator.java b/packages/SystemUI/src/com/android/systemui/keyguard/KeyguardViewMediator.java
+index 05e5271b1..9cee296b0 100644
+--- a/packages/SystemUI/src/com/android/systemui/keyguard/KeyguardViewMediator.java
++++ b/packages/SystemUI/src/com/android/systemui/keyguard/KeyguardViewMediator.java
+@@ -1727,6 +1727,15 @@ public class KeyguardViewMediator implements CoreStartable,
+                 SYSTEMUI_PERMISSION, null /* scheduler */,
+                 Context.RECEIVER_EXPORTED_UNAUDITED);
+ 
++        // thor2: the Nine lock screen (a platform-signed app drawn over the keyguard) checks the
++        // PIN itself, through LockSettingsService like the bouncer, then asks for the keyguard to
++        // go. Only an app holding ACCESS_KEYGUARD_SECURE_STORAGE - signature-only, so the
++        // platform's own - may send it.
++        mContext.registerReceiver(mThor2UnlockReceiver,
++                new IntentFilter(THOR2_UNLOCK_ACTION),
++                android.Manifest.permission.ACCESS_KEYGUARD_SECURE_STORAGE, null /* scheduler */,
++                Context.RECEIVER_EXPORTED);
++
+         mAlarmManager = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+ 
+         // Assume keyguard is showing (unless it's disabled) until we know for sure, unless Keyguard
+@@ -2799,6 +2808,21 @@ public class KeyguardViewMediator implements CoreStartable,
+         }
+     }
+ 
++    private static final String THOR2_UNLOCK_ACTION = "org.thor2.keyguard.action.UNLOCK";
++
++    /** See setupLocked: the thor2 lock screen app unlocked the phone. */
++    private final BroadcastReceiver mThor2UnlockReceiver = new BroadcastReceiver() {
++        @Override
++        public void onReceive(Context context, Intent intent) {
++            if (!THOR2_UNLOCK_ACTION.equals(intent.getAction())) return;
++            mHandler.post(() -> {
++                if (!mShowing) return;
++                Log.d(TAG, "thor2: the lock screen app unlocked the phone");
++                mViewMediatorCallback.keyguardDone(mSelectedUserInteractor.getSelectedUserId());
++            });
++        }
++    };
++
+     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+         @Override
+         public void onReceive(Context context, Intent intent) {
+-- 
+2.43.0
+

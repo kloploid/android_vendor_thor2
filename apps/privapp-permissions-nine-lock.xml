@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The privileged permissions NineLock (apps/Android.bp) asks for. Signed with the platform key,
+     it holds them by signature already; this allowlist keeps it so if the key ever changes. -->
+<permissions>
+    <privapp-permissions package="io.github.ninetailsflip.lock">
+        <permission name="android.permission.START_ACTIVITIES_FROM_BACKGROUND" />
+        <permission name="android.permission.MEDIA_CONTENT_CONTROL" />
+        <permission name="android.permission.WRITE_SECURE_SETTINGS" />
+        <permission name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
+        <permission name="android.permission.MODIFY_PHONE_STATE" />
+    </privapp-permissions>
+</permissions>
