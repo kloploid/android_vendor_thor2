@@ -42,7 +42,7 @@ vendor/thor2/
 │   └── Android.bp                  # Preinstalls them (presigned, in /product)
 ├── patches/
 │   ├── apply.sh                    # Applies the patches below (safe to re-run)
-│   ├── frameworks_base/            # 4 patches: key handling, lid, D-pad focus
+│   ├── frameworks_base/            # 5 patches: key handling, lid, D-pad focus, Recents
 │   └── packages_apps_Launcher3/    # 1 patch: keypad navigation in the launcher
 ├── keylayout/
 │   ├── mtk-kpd.kl                  # Keypad (mtk-kpd driver)
@@ -93,12 +93,14 @@ vendor/thor2/
 
   The palette follows [nine-core](https://github.com/NineTailsFlip/nine-core)'s `Palette`.
 - `config_defaultDialer` / `config_defaultSms`: P9 and M9 (see below) are the default phone and SMS apps.
+- `config_showNavigationBar = false`: no on-screen Back/Home/Recents; the phone has them as keys.
+- `config_recentsComponentName`: L9's Recents screen (see below), in place of Launcher3 Quickstep, which isn't in the image.
 
 **`Thor2LineageOverlay`** (target `lineageos.platform`)
 
 - `config_deviceHardwareKeys = 71`, which is Home (1) + Back (2) + Menu (4) + Volume (64). These show up in *Settings → System → Buttons*. Camera (32) is left out on purpose, because ThorSubScreen handles it.
 - `config_deviceHardwareWakeKeys = 71`.
-- `config_longPressOnMenuBehavior = 2`: a long press on the left soft key opens recent apps.
+- `config_longPressOnMenuBehavior = 2`: a long press on the left soft key opens recent apps: L9's screen, which `ro.config.thor2_recents` names for the `frameworks/base` patch `0005`.
 
 `thor2.mk` also sets `ro.config.thor2_keypad_focus=true`, which a `ViewGroup` patch reads (see below).
 
@@ -110,19 +112,20 @@ vendor/thor2/
 |---|---|
 | [TG9](https://github.com/NineTailsFlip/tg9) | Telegram |
 | [G9](https://github.com/NineTailsFlip/g9) | Gallery |
-| [L9](https://github.com/NineTailsFlip/l9) | Launcher. Android asks which home app to use the first time Home is pressed |
+| [L9](https://github.com/NineTailsFlip/l9) | Launcher, the only one: the home screen and Recents (Launcher3 Quickstep is left out through `overrides`; `nine-l9-hiddenapi.xml` lets L9 open and close other apps' tasks) |
 | [C9](https://github.com/NineTailsFlip/c9) | Calendars and contacts |
 | [P9](https://github.com/NineTailsFlip/p9) | Phone, the default dialer |
 | [M9](https://github.com/NineTailsFlip/m9) | Messages, the default SMS app |
 | [K9](https://github.com/NineTailsFlip/k9) | Keyboard (Traditional T9 on nine-core), the keyboard in use from the first screen |
-| [Setup](https://github.com/NineTailsFlip/setup9) | The first-time setup, in place of LineageSetupWizard: language, Wi-Fi, date and time, PIN, and the look of every Nine app |
+| [Setup](https://github.com/NineTailsFlip/setup9) | The first-time setup, in place of LineageSetupWizard: language, Wi-Fi, K9's layouts, date and time, PIN, and the look of every Nine app |
+| [Settings](https://github.com/NineTailsFlip/settings9) | The phone's settings in the Nine look; it answers `android.settings.*` above the stock Settings app, which stays, without its icon, for the system's own dialogs and the pages not ported yet |
 
 `apps/fetch.py` downloads each app's latest GitHub release into `apps/prebuilt/` (git-ignored)
 and checks it against the release's `update.json`. For TG9 it takes the `arm64-v8a` APK. The
 APKs keep their release signature (`presigned`), so the preinstalled copies update from GitHub
-through the apps' own updater, like any installed copy - all but Setup, which the build re-signs
-with the platform key as a privileged app (it sets the system's language, time, Wi-Fi and lock;
-`privapp-permissions-nine-setup.xml` lists what it may), so it updates only with the image. Run `fetch.py` before building; the
+through the apps' own updater, like any installed copy - all but Setup and Settings, which the build re-signs
+with the platform key as privileged apps (they set the system's language, time, Wi-Fi, lock and
+the rest; `privapp-permissions-nine-setup.xml` and `-nine-settings.xml` list what they may), so they update only with the image. Run `fetch.py` before building; the
 build fails without the APKs.
 
 ## Using it
@@ -170,7 +173,8 @@ build fails without the APKs.
 | | `0002` PhoneWindowManager: thor2 keypad keys, lid and home long press | Handles the keypad keys, the lid (Hall sensor) and a long press on Home |
 | | `0003` ViewGroup: let D-pad focus reach touchscreenBlocksFocus groups | Toolbars that block focus in touch mode become reachable with the D-pad, when `ro.config.thor2_keypad_focus` is set |
 | | `0004` PhoneFallbackEventHandler: pass camera and call keys through | Camera and Call reach apps instead of being taken by the system |
-| `packages/apps/Launcher3` | `0001` keypad navigation for thor2 flip phone | Moving around the launcher with the keypad |
+| | `0005` PhoneWindowManager: open the launcher's own recents screen | The Recents key starts the activity `ro.config.thor2_recents` names (L9's), since SystemUI has no Quickstep to show them |
+| `packages/apps/Launcher3` | `0001` keypad navigation for thor2 flip phone | Moving around the launcher with the keypad (kept for builds that still include Launcher3; this image uses L9) |
 
 ## Not included
 

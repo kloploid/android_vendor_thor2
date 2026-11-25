@@ -5,7 +5,8 @@ PRODUCT_PACKAGES += \
     Thor2LineageOverlay
 
 # Приложения NineTailsFlip (apps/: последние релизы с GitHub, apps/fetch.py). P9 и M9 — звонки и SMS
-# по умолчанию (overlay/framework); L9 — рабочий стол на выбор при первом нажатии «Домой».
+# по умолчанию (overlay/framework); L9 — единственный лаунчер (рабочий стол и «Недавние»,
+# стоковый Launcher3QuickStep убран через overrides в apps/Android.bp).
 PRODUCT_PACKAGES += \
     NineTG9 \
     NineG9 \
@@ -21,6 +22,12 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     NineSetup
 
+# Настройки в стиле Nine (settings9) открываются вместо стоковых: значок, шестерёнка в шторке и все
+# android.settings.* из приложений. Стоковые Settings остаются для системных диалогов (сопряжение
+# Bluetooth, FallbackHome, подтверждение PIN) и ещё не перенесённых страниц, без значка.
+PRODUCT_PACKAGES += \
+    NineSettings
+
 PRODUCT_COPY_FILES += \
     vendor/thor2/keylayout/mtk-kpd.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/mtk-kpd.kl \
     vendor/thor2/keylayout/mtk-pmic-keys.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/mtk-pmic-keys.kl \
@@ -30,3 +37,8 @@ PRODUCT_COPY_FILES += \
 # ro.config.* читают все приложения (config_prop).
 PRODUCT_SYSTEM_PROPERTIES += \
     ro.config.thor2_keypad_focus=true
+
+# «Недавние» (долгая левая софт-клавиша) открывают экран L9 (patches/frameworks_base 0005); тот же
+# компонент — config_recentsComponentName (overlay/framework).
+PRODUCT_SYSTEM_PROPERTIES += \
+    ro.config.thor2_recents=io.github.ninetailsflip.l9/life.furrer.l9.RecentsActivity

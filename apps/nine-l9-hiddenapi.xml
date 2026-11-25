@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- L9 (apps/Android.bp) is the phone's Recents: it opens a task from Recents and closes one through
+     IActivityTaskManager.startActivityFromRecents/removeTask, which only system code may call. -->
+<config>
+    <hidden-api-whitelisted-app package="io.github.ninetailsflip.l9" />
+</config>

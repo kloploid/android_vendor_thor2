@@ -35,9 +35,22 @@ android_app_import {
     // Signed with v2/v3 by their release builds: Soong must not repack them.
     preprocessed: true,
     product_specific: true,
+    // L9 is the only launcher: home screen and Recents (config_recentsComponentName,
+    // ro.config.thor2_recents). Quickstep's Taskbar drew Back/Home/Recents buttons on screen.
+    overrides: ["Launcher3QuickStep"],
+    required: ["nine-l9-hiddenapi.xml"],
     dex_preopt: {
         enabled: false,
     },
+}
+
+// L9's Recents opens and closes other apps' tasks through IActivityTaskManager, which has no SDK
+// API; this lets the system app L9 make those calls.
+prebuilt_etc {
+    name: "nine-l9-hiddenapi.xml",
+    src: "nine-l9-hiddenapi.xml",
+    sub_dir: "sysconfig",
+    product_specific: true,
 }
 
 // C9: calendars and contacts.
@@ -111,6 +124,29 @@ android_app_import {
 prebuilt_etc {
     name: "privapp-permissions-nine-setup.xml",
     src: "privapp-permissions-nine-setup.xml",
+    sub_dir: "permissions",
+    product_specific: true,
+}
+
+// Settings in the Nine look (settings9): the phone's settings, platform-signed and privileged like
+// NineSetup, so it can change system settings. The stock Settings app stays for the system's own
+// dialogs (Bluetooth pairing, FallbackHome, confirming the PIN) and the pages not ported yet; its
+// launcher icon is hidden by Settings and its android.settings.* filters are outranked.
+android_app_import {
+    name: "NineSettings",
+    apk: "prebuilt/settings9.apk",
+    certificate: "platform",
+    privileged: true,
+    product_specific: true,
+    required: ["privapp-permissions-nine-settings.xml"],
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+prebuilt_etc {
+    name: "privapp-permissions-nine-settings.xml",
+    src: "privapp-permissions-nine-settings.xml",
     sub_dir: "permissions",
     product_specific: true,
 }

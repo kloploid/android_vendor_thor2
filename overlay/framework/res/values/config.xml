@@ -16,4 +16,13 @@
     <!-- Звонки и SMS по умолчанию — P9 и M9 (apps/). -->
     <string name="config_defaultDialer" translatable="false">io.github.ninetailsflip.p9</string>
     <string name="config_defaultSms" translatable="false">io.github.ninetailsflip.m9</string>
+
+    <!-- Без экранных кнопок Назад/Домой/Недавние: у раскладушки они есть на клавиатуре. -->
+    <bool name="config_showNavigationBar">false</bool>
+
+    <!-- «Недавние» — экран L9 (apps/: стоковый Launcher3 Quickstep в образ не входит). Пакет из
+         этого значения получает права recents (START_TASKS_FROM_RECENTS, REMOVE_TASKS), а
+         SystemUI ищет в нём сервис Quickstep: пустое значение роняет SystemUI. Открывает экран
+         PhoneWindowManager по ro.config.thor2_recents (thor2.mk, patches/frameworks_base 0005). -->
+    <string name="config_recentsComponentName" translatable="false">io.github.ninetailsflip.l9/life.furrer.l9.RecentsActivity</string>
 </resources>

@@ -1,0 +1,77 @@
+From 2504eca4c1ef33c9369d16c43c290346b6a8900d Mon Sep 17 00:00:00 2001
+From: kloploid <10303425+kloploid@users.noreply.github.com>
+Date: Wed, 25 Nov 2026 23:38:02 +0200
+Subject: [PATCH] PhoneWindowManager: open the launcher's own recents screen on
+ thor2
+
+thor2 ships without Launcher3 Quickstep, so SystemUI has no overview
+service to show recent apps. When ro.config.thor2_recents names an
+activity, toggleRecentApps/showRecentApps start it directly instead; a
+second toggle reaches it as onNewIntent, and the screen closes itself.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Change-Id: I06788201d585daccd5d2fedb2ebd3ecb5cbc25ed
+---
+ .../server/policy/PhoneWindowManager.java     | 32 +++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index 424ea3cf4..269f489b9 100644
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -4713,6 +4713,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+ 
+     private void toggleRecentApps() {
+         mPreloadedRecentApps = false; // preloading no longer needs to be canceled
++        if (thor2ShowRecents()) {
++            return;
++        }
+         StatusBarManagerInternal statusbar = getStatusBarManagerInternal();
+         if (statusbar != null) {
+             statusbar.toggleRecentApps();
+@@ -4734,6 +4737,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+ 
+     private void showRecentApps(boolean triggeredFromAltTab) {
+         mPreloadedRecentApps = false; // preloading no longer needs to be canceled
++        if (thor2ShowRecents()) {
++            dismissKeyboardShortcutsMenu();
++            return;
++        }
+         StatusBarManagerInternal statusbar = getStatusBarManagerInternal();
+         if (statusbar != null) {
+             statusbar.showRecentApps(triggeredFromAltTab);
+@@ -5031,6 +5038,31 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         }
+     }
+ 
++    /**
++     * На thor2 «Недавние» — экран приложения-лаунчера (ro.config.thor2_recents, тот же компонент,
++     * что config_recentsComponentName), а не Quickstep: стоковый лаунчер в образ не входит, и без
++     * него SystemUI показать список не может. Повторный вызов, пока экран открыт, доставляет ему
++     * onNewIntent — экран сам закрывается, как переключатель. false — свойство не задано или
++     * компонента нет, тогда работает обычный путь через SystemUI.
++     */
++    private boolean thor2ShowRecents() {
++        ComponentName recents = ComponentName.unflattenFromString(
++                SystemProperties.get("ro.config.thor2_recents", ""));
++        if (recents == null) {
++            return false;
++        }
++        Intent intent = new Intent(Intent.ACTION_MAIN)
++                .setComponent(recents)
++                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
++        try {
++            mContext.startActivityAsUser(intent, UserHandle.CURRENT);
++            return true;
++        } catch (ActivityNotFoundException e) {
++            Slog.w(TAG, "thor2 recents not found: " + recents);
++            return false;
++        }
++    }
++
+     /** Долгое «Домой» открывает шторку (как в стоке); выключается thor2_home_long_press_shade=0. */
+     private boolean thor2HomeLongPressShade() {
+         return Settings.Global.getInt(mContext.getContentResolver(),
+-- 
+2.43.0
+
