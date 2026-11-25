@@ -1,13 +1,24 @@
 # android_vendor_thor2
 
-Vendor additions for running a **LineageOS GSI** on the **ALT AT-M140 "MIVE Style Folder 2"**
-(codename `thor2`): a Korean flip phone with a physical keypad and an external screen.
+LineageOS for the ALT AT-M140 "MIVE Style Folder 2" (`thor2`), a keypad flip phone with an external screen.
 
-This repository goes in `vendor/thor2` of a LineageOS source tree. Together with its patches to
-`frameworks/base` and Launcher3, it turns a generic
-`arm64_bvN` GSI into something that behaves like a keypad phone. The D-pad and the number keys
-work and wake the screen, the red key ends calls, the lid sleeps and wakes the phone, and the
-soft keys act as Menu and Back.
+This repository goes in `vendor/thor2` of a LineageOS source tree. With its patches to
+`frameworks/base`, it turns a generic `arm64_bvN` GSI into a keypad phone: the D-pad and the
+number keys work and wake the screen, the red key ends calls, the lid sleeps and wakes the phone,
+the soft keys act as Menu and Back — and everything the user touches is in the
+[NineTailsFlip](https://github.com/NineTailsFlip) look, from the first-time setup to the lock
+screen.
+
+## Features
+
+- **Keys:** key layouts for the keypad and the PMIC keys; the D-pad wakes the screen; F1–F3,
+  Camera, SOS and the lid handled by [ThorSubScreen](https://github.com/kloploid/android_packages_apps_ThorSubScreen).
+- **No touchscreen needed:** no on-screen navigation buttons; D-pad focus reaches toolbars that
+  normally block it.
+- **The Nine apps built in:** launcher and Recents (L9), phone (P9), messages (M9), calendars and
+  contacts (C9), gallery (G9), Telegram (TG9), keyboard (K9).
+- **The system in the Nine look:** first-time setup (Setup), Settings, the lock screen (Lock);
+  dark theme, monospace font and black surfaces for what's left of AOSP.
 
 ## Device
 
@@ -24,22 +35,27 @@ soft keys act as Menu and Back.
 
 ## Status
 
-Built and tested with **LineageOS 23.2 (Android 16)**, target `lineage_arm64_bvN4`, using
-[MisterZtr](https://github.com/MisterZtr)'s GSI manifest and patches. It runs on a 64-bit vendor
-image that carries PowerVR libraries from the TECNO Spark 20C, which has the same SoC and GPU
-driver version.
+Built with **LineageOS 23.2 (Android 16)**, target `lineage_arm64_bvN4`, using
+[MisterZtr](https://github.com/MisterZtr)'s GSI manifest and patches, on a 64-bit vendor image
+that carries PowerVR libraries from the TECNO Spark 20C (same SoC and GPU driver version).
 
-As of October 2026, the following work: graphics, camera, Wi-Fi, Bluetooth, sensors, modem,
-the keypad and the lid. Calls with a SIM card haven't been tested yet.
+| Area | State |
+|---|---|
+| Graphics, camera, Wi-Fi, Bluetooth, sensors, modem, keypad, lid | Working (October 2026) |
+| Calls with a SIM card | Not tested yet |
+| Setup and K9 | Working (November 2026) |
+| L9 as Recents, no navigation bar, Settings, Lock | New in November 2026, not yet verified on the phone |
 
-## Contents
+## Project structure
 
 ```
 vendor/thor2/
 ├── thor2.mk                        # Product makefile: packages, key files, properties
 ├── apps/
 │   ├── fetch.py                    # Downloads the NineTailsFlip apps' latest releases
-│   └── Android.bp                  # Preinstalls them (presigned, in /product)
+│   ├── Android.bp                  # Preinstalls them (in /product)
+│   ├── privapp-permissions-*.xml   # What Setup, Settings and Lock may do
+│   └── nine-l9-hiddenapi.xml       # Lets L9 manage tasks as the Recents screen
 ├── patches/
 │   ├── apply.sh                    # Applies the patches below (safe to re-run)
 │   ├── frameworks_base/            # 7 patches: key handling, lid, D-pad focus, Recents, lock screen
@@ -129,7 +145,7 @@ with the platform key as privileged apps (they set the system's language, time, 
 the rest; `privapp-permissions-nine-setup.xml`, `-nine-settings.xml` and `-nine-lock.xml` list what they may), so they update only with the image. Run `fetch.py` before building; the
 build fails without the APKs.
 
-## Using it
+## Building
 
 1. Add the repository to your local manifest, e.g. `.repo/local_manifests/thor2.xml`:
 
@@ -166,6 +182,31 @@ build fails without the APKs.
    m
    ```
 
+## Flashing
+
+The order that works on thor2 (active slot `b`):
+
+1. Boot to fastbootd: `adb reboot fastboot`.
+2. If `super` has no room for the system image, delete the stock `product_b` (and any leftover
+   `*-cow` partitions): `fastboot delete-logical-partition product_b`. The GSI has its own
+   `/product` inside system, and its `skip_mount.cfg` skips mounting the partition.
+3. Flash the 64-bit vendor: `fastboot flash vendor vendor_stage2.img` (the stock 32-bit vendor
+   can't run an arm64 GSI). It carries another phone's proprietary GPU libraries, so it isn't in
+   this repository.
+4. Flash the system: `fastboot flash system <image>`.
+5. Reboot to the bootloader (`fastboot reboot bootloader`), then disable verification and wipe
+   there — fastbootd on this phone has no Fastboot HAL, so `-w` doesn't work in it:
+   ```bash
+   fastboot --disable-verity --disable-verification flash vbmeta vbmeta_b.img   # the phone's own vbmeta, from a backup
+   fastboot -w
+   fastboot reboot
+   ```
+
+If the phone ends up in a boot loop, the MediaTek Preloader can put it in fastboot without keys:
+answer its `READY` on the USB serial port with `FASTBOOT`.
+
+Don't use `adb root` on this build: it drops USB until the next restart.
+
 ## Patches
 
 | Repository | Patch | What it does |
@@ -179,15 +220,19 @@ build fails without the APKs.
 | | `0007` PhoneWindowManager: Home does nothing on the thor2 lock screen | With `ro.config.thor2_lockscreen`'s app focused over the keyguard, Home is ignored instead of uncovering the stock keyguard |
 | `packages/apps/Launcher3` | `0001` keypad navigation for thor2 flip phone | Moving around the launcher with the keypad (kept for builds that still include Launcher3; this image uses L9) |
 
-## Not included
+`patches/apply.sh` applies them with `git am`, skipping any already applied, so it's safe to re-run.
 
-This lives in its own repository:
+## Related repositories
 
-**[ThorSubScreen](https://github.com/kloploid/android_packages_apps_ThorSubScreen)** (`packages/apps/ThorSubScreen`) is a platform-signed system app for the
-external screen. It shows a clock, notifications and toggle tiles, provides a cursor for keypad
-navigation, and handles F1–F3 and the Camera key. `thor2.mk` lists it in `PRODUCT_PACKAGES`.
-Remove it from there if you build without it. Without it, F1–F3, Camera and SOS have nothing to
-go to.
+- **[ThorSubScreen](https://github.com/kloploid/android_packages_apps_ThorSubScreen)**
+  (`packages/apps/ThorSubScreen`): the external screen, F1–F3, Camera and SOS, and a cursor.
+  `thor2.mk` lists it in `PRODUCT_PACKAGES`; without it, F1–F3, Camera and SOS have nothing to go to.
+- **[NineTailsFlip](https://github.com/NineTailsFlip)**: the apps `apps/` builds in.
+
+## Contributing
+
+Issues and pull requests are welcome. Say which LineageOS version and GSI target you build, and
+include a `logcat` for anything that misbehaves on the phone.
 
 ## Credits
 
@@ -197,5 +242,5 @@ go to.
 
 ## License
 
-`keychars/mtk-kpd.kcm` is derived from AOSP's `Generic.kcm` and stays under the
-[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), as its header says.
+No license file yet. `keychars/mtk-kpd.kcm` is derived from AOSP's `Generic.kcm` and stays
+under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), as its header says.
