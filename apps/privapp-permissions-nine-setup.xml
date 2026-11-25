@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The privileged permissions NineSetup (apps/Android.bp) asks for. Signed with the platform key,
+     it holds them by signature already; this allowlist keeps it so if the key ever changes. -->
+<permissions>
+    <privapp-permissions package="io.github.ninetailsflip.setup">
+        <permission name="android.permission.CHANGE_CONFIGURATION" />
+        <permission name="android.permission.WRITE_SECURE_SETTINGS" />
+        <permission name="android.permission.SET_TIME" />
+        <permission name="android.permission.SET_TIME_ZONE" />
+        <permission name="android.permission.NETWORK_SETTINGS" />
+        <permission name="android.permission.NETWORK_SETUP_WIZARD" />
+        <permission name="android.permission.ACCESS_KEYGUARD_SECURE_STORAGE" />
+    </privapp-permissions>
+</permissions>

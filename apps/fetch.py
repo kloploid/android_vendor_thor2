@@ -6,7 +6,8 @@ usage: vendor/thor2/apps/fetch.py
 Reads each app's update.json from its latest GitHub release (the same file the apps' own
 updater reads), takes the arm64-v8a APK if there is one, else the universal one, checks its
 SHA-256, and saves it as prebuilt/<app>.apk. The APKs keep their release signature, so the
-copies in the image update from GitHub like any installed copy.
+copies in the image update from GitHub like any installed copy - all but setup9, which the build
+re-signs with the platform key.
 """
 import hashlib
 import json
@@ -15,7 +16,8 @@ import sys
 import time
 import urllib.request
 
-APPS = ["tg9", "g9", "l9", "c9", "p9", "m9"]
+# setup9 is the first-time setup: the build re-signs it with the platform key (Android.bp).
+APPS = ["tg9", "g9", "l9", "c9", "p9", "m9", "setup9"]
 ABI = "arm64-v8a"
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "prebuilt")

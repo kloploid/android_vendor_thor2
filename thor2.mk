@@ -14,6 +14,11 @@ PRODUCT_PACKAGES += \
     NineP9 \
     NineM9
 
+# Первая настройка в стиле Nine вместо LineageSetupWizard (apps/Android.bp: overrides). Шрифт и
+# полосу подсказок, выбранные в ней, подхватывают все приложения Nine (nine-core SetupChoices).
+PRODUCT_PACKAGES += \
+    NineSetup
+
 PRODUCT_COPY_FILES += \
     vendor/thor2/keylayout/mtk-kpd.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/mtk-kpd.kl \
     vendor/thor2/keylayout/mtk-pmic-keys.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/mtk-pmic-keys.kl \

@@ -78,3 +78,26 @@ android_app_import {
         enabled: false,
     },
 }
+
+// Setup: the first-time setup in the Nine suite's look, in place of LineageSetupWizard. Unlike
+// the apps above it's re-signed here with the platform key (it sets the system's language, time,
+// Wi-Fi and lock), so it updates only with the image.
+android_app_import {
+    name: "NineSetup",
+    apk: "prebuilt/setup9.apk",
+    certificate: "platform",
+    privileged: true,
+    product_specific: true,
+    overrides: ["LineageSetupWizard"],
+    required: ["privapp-permissions-nine-setup.xml"],
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+prebuilt_etc {
+    name: "privapp-permissions-nine-setup.xml",
+    src: "privapp-permissions-nine-setup.xml",
+    sub_dir: "permissions",
+    product_specific: true,
+}
