@@ -6,6 +6,8 @@ android_app_import {
     name: "NineTG9",
     apk: "prebuilt/tg9.apk",
     presigned: true,
+    // Signed with v2/v3 by their release builds: Soong must not repack them.
+    preprocessed: true,
     product_specific: true,
     dex_preopt: {
         enabled: false,
@@ -17,6 +19,8 @@ android_app_import {
     name: "NineG9",
     apk: "prebuilt/g9.apk",
     presigned: true,
+    // Signed with v2/v3 by their release builds: Soong must not repack them.
+    preprocessed: true,
     product_specific: true,
     dex_preopt: {
         enabled: false,
@@ -28,6 +32,8 @@ android_app_import {
     name: "NineL9",
     apk: "prebuilt/l9.apk",
     presigned: true,
+    // Signed with v2/v3 by their release builds: Soong must not repack them.
+    preprocessed: true,
     product_specific: true,
     dex_preopt: {
         enabled: false,
@@ -39,6 +45,8 @@ android_app_import {
     name: "NineC9",
     apk: "prebuilt/c9.apk",
     presigned: true,
+    // Signed with v2/v3 by their release builds: Soong must not repack them.
+    preprocessed: true,
     product_specific: true,
     dex_preopt: {
         enabled: false,
@@ -50,6 +58,8 @@ android_app_import {
     name: "NineP9",
     apk: "prebuilt/p9.apk",
     presigned: true,
+    // Signed with v2/v3 by their release builds: Soong must not repack them.
+    preprocessed: true,
     product_specific: true,
     dex_preopt: {
         enabled: false,
@@ -61,6 +71,8 @@ android_app_import {
     name: "NineM9",
     apk: "prebuilt/m9.apk",
     presigned: true,
+    // Signed with v2/v3 by their release builds: Soong must not repack them.
+    preprocessed: true,
     product_specific: true,
     dex_preopt: {
         enabled: false,
