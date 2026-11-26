@@ -24,6 +24,10 @@ PRODUCT_PACKAGES += \
     default-permissions-nine.xml \
     sysconfig-nine.xml
 
+# Загрузочная анимация в стиле Nine (bootanimation/make.py) вместо лайнежевской.
+PRODUCT_PACKAGES += \
+    thor2-bootanimation
+
 # Первая настройка в стиле Nine вместо LineageSetupWizard (apps/Android.bp: overrides). Шрифт и
 # полосу подсказок, выбранные в ней, подхватывают все приложения Nine (nine-core SetupChoices);
 # клавиатурой она с первого экрана делает K9 (NineK9).

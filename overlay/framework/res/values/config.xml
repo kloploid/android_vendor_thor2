@@ -33,4 +33,8 @@
 
     <!-- G9 is the gallery (the SYSTEM_GALLERY role); Glimpse is left out of the image. -->
     <string name="config_systemGallery" translatable="false">io.github.ninetailsflip.g9</string>
+
+    <!-- Диалоги системы с прямыми углами, как экраны Nine, а не скруглённые на 28dp. -->
+    <dimen name="config_dialogCornerRadius">0dp</dimen>
+    <dimen name="config_bottomDialogCornerRadius">0dp</dimen>
 </resources>

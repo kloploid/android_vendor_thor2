@@ -72,6 +72,7 @@ vendor/thor2/
 │   └── mtk-pmic-keys.kl            # PMIC keys: red key, volume
 ├── keychars/
 │   └── mtk-kpd.kcm                 # Key character map (AOSP Generic.kcm, DEL falls back to BACK)
+├── bootanimation/                  # The Nine boot animation and make.py, which draws it
 └── overlay/
     ├── framework/                  # Thor2FrameworkOverlay (RRO for android)
     └── lineage/                    # Thor2LineageOverlay (RRO for lineageos.platform)
@@ -112,7 +113,10 @@ vendor/thor2/
 - **The Nine look for what's left of AOSP:**
   - dark theme by default (`config_defaultNightMode = 2`; this applies to fresh installs only);
   - the monospace system font (`monospace`, i.e. DroidSansMono, which has Cyrillic);
-  - pure black backgrounds, dialogs and surfaces, with a white accent instead of a colour taken from the wallpaper.
+  - pure black backgrounds, dialogs and surfaces, with a white accent instead of a colour taken from the wallpaper;
+  - toasts as a black box with a gray hairline and monospace text, system dialogs with square corners;
+  - Material You's monochrome style on Lineage's pure black for SystemUI and the stock apps (set by Settings, `SystemLook`);
+  - the boot animation: "nine" typed by a monospace cursor (`bootanimation/`, in place of Lineage's).
 
   The palette follows [nine-core](https://github.com/NineTailsFlip/nine-core)'s `Palette`.
 - `config_defaultDialer` / `config_defaultSms`: P9 and M9 (see below) are the default phone and SMS apps.

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Текст тоста: моноширинный (config_bodyFontFamily), белый, вместо переменного шрифта
+         редизайна уведомлений. -->
+    <style name="TextAppearance.Toast">
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineHeight">20sp</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+    </style>
+</resources>
