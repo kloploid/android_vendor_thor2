@@ -25,4 +25,12 @@
          SystemUI ищет в нём сервис Quickstep: пустое значение роняет SystemUI. Открывает экран
          PhoneWindowManager по ro.config.thor2_recents (thor2.mk, patches/frameworks_base 0005). -->
     <string name="config_recentsComponentName" translatable="false">io.github.ninetailsflip.l9/life.furrer.l9.RecentsActivity</string>
+
+    <!-- The Nine apps' notification listeners are on from the first boot: L9's home screen, Lock,
+         Settings' shade and status bar, ThorSubScreen's outer screen. Do not disturb: Settings. -->
+    <string name="config_defaultListenerAccessPackages" translatable="false">io.github.ninetailsflip.l9:io.github.ninetailsflip.lock:io.github.ninetailsflip.settings:org.thor2.subscreen</string>
+    <string name="config_defaultDndAccessPackages" translatable="false">io.github.ninetailsflip.settings</string>
+
+    <!-- G9 is the gallery (the SYSTEM_GALLERY role); Glimpse is left out of the image. -->
+    <string name="config_systemGallery" translatable="false">io.github.ninetailsflip.g9</string>
 </resources>

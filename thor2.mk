@@ -16,6 +16,14 @@ PRODUCT_PACKAGES += \
     NineM9 \
     NineK9
 
+# Их стоковые аналоги (Contacts, Dialer, Messaging, Etar, Glimpse, LatinIME) убраны через overrides в
+# apps/Android.bp. Разрешения приложения Nine получают без вопросов (default-permissions), TG9 — вне
+# оптимизации батареи (sysconfig); их слушатели уведомлений включены с первой загрузки, G9 — галерея
+# (overlay/framework).
+PRODUCT_PACKAGES += \
+    default-permissions-nine.xml \
+    sysconfig-nine.xml
+
 # Первая настройка в стиле Nine вместо LineageSetupWizard (apps/Android.bp: overrides). Шрифт и
 # полосу подсказок, выбранные в ней, подхватывают все приложения Nine (nine-core SetupChoices);
 # клавиатурой она с первого экрана делает K9 (NineK9).

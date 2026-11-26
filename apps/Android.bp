@@ -22,6 +22,8 @@ android_app_import {
     // Signed with v2/v3 by their release builds: Soong must not repack them.
     preprocessed: true,
     product_specific: true,
+    // The only gallery: Lineage's Glimpse is left out of the image.
+    overrides: ["Glimpse"],
     dex_preopt: {
         enabled: false,
     },
@@ -61,6 +63,8 @@ android_app_import {
     // Signed with v2/v3 by their release builds: Soong must not repack them.
     preprocessed: true,
     product_specific: true,
+    // The only contacts and calendar: the stock Contacts and Lineage's Etar are left out.
+    overrides: ["Contacts", "Etar"],
     dex_preopt: {
         enabled: false,
     },
@@ -74,6 +78,8 @@ android_app_import {
     // Signed with v2/v3 by their release builds: Soong must not repack them.
     preprocessed: true,
     product_specific: true,
+    // The only phone app: the stock Dialer is left out (P9 is the default dialer).
+    overrides: ["Dialer"],
     dex_preopt: {
         enabled: false,
     },
@@ -87,6 +93,8 @@ android_app_import {
     // Signed with v2/v3 by their release builds: Soong must not repack them.
     preprocessed: true,
     product_specific: true,
+    // The only messages app: the stock Messaging is left out (M9 is the default SMS app).
+    overrides: ["messaging"],
     dex_preopt: {
         enabled: false,
     },
@@ -100,6 +108,8 @@ android_app_import {
     // Signed with v2/v3 by their release builds: Soong must not repack them.
     preprocessed: true,
     product_specific: true,
+    // The only keyboard: the stock LatinIME (a touch keyboard) is left out.
+    overrides: ["LatinIME"],
     dex_preopt: {
         enabled: false,
     },
@@ -170,5 +180,23 @@ prebuilt_etc {
     name: "privapp-permissions-nine-lock.xml",
     src: "privapp-permissions-nine-lock.xml",
     sub_dir: "permissions",
+    product_specific: true,
+}
+
+// What the Nine apps may do from the first boot, without asking: their runtime permissions
+// (default-permissions: granted at the first boot and again after an update of the image, and the
+// user can still take them back), and TG9 kept out of battery optimization so its background
+// connection - the only way messages arrive without Google's push - lives through Doze.
+prebuilt_etc {
+    name: "default-permissions-nine.xml",
+    src: "default-permissions-nine.xml",
+    sub_dir: "default-permissions",
+    product_specific: true,
+}
+
+prebuilt_etc {
+    name: "sysconfig-nine.xml",
+    src: "sysconfig-nine.xml",
+    sub_dir: "sysconfig",
     product_specific: true,
 }

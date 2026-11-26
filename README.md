@@ -16,7 +16,10 @@ screen.
 - **No touchscreen needed:** no on-screen navigation buttons; D-pad focus reaches toolbars that
   normally block it.
 - **The Nine apps built in:** launcher and Recents (L9), phone (P9), messages (M9), calendars and
-  contacts (C9), gallery (G9), Telegram (TG9), keyboard (K9).
+  contacts (C9), gallery (G9), Telegram (TG9), keyboard (K9), in place of their stock
+  counterparts (Dialer, Messaging, Contacts, Etar, Glimpse and LatinIME are left out through
+  `overrides`); their permissions are granted without asking, their notification listeners are on
+  from the first boot, and G9 is the system gallery.
 - **The system in the Nine look:** first-time setup (Setup), Settings, the status bar, the
   notification shade and quick settings (in Settings), the lock screen (Lock); dark theme, monospace font and black
   surfaces for what's left of AOSP.
@@ -57,6 +60,8 @@ vendor/thor2/
 │   ├── fetch.py                    # Downloads the NineTailsFlip apps' latest releases
 │   ├── Android.bp                  # Preinstalls them (in /product)
 │   ├── privapp-permissions-*.xml   # What Setup, Settings and Lock may do
+│   ├── default-permissions-nine.xml # The Nine apps' runtime permissions, granted without asking
+│   ├── sysconfig-nine.xml          # TG9 out of battery optimization
 │   └── nine-l9-hiddenapi.xml       # Lets L9 manage tasks as the Recents screen
 ├── patches/
 │   ├── apply.sh                    # Applies the patches below (safe to re-run)

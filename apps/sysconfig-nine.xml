@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TG9 keeps its connection in the background (no Google push on this phone): out of battery
+     optimization, so Doze doesn't cut it off. -->
+<config>
+    <allow-in-power-save package="io.github.ninetailsflip.tg9" />
+</config>

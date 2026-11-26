@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The runtime permissions the Nine apps ask for, granted without asking: they're the phone's own
+     apps. Granted at the first boot and again after an update of the image; not fixed, so the user
+     can still take any back in Settings. Settings grants its own itself (OwnPermissions); Lock,
+     Setup and ThorSubScreen need none. -->
+<exceptions>
+    <!-- C9: contacts and calendar, its reminders, calling a contact. -->
+    <exception package="io.github.ninetailsflip.c9">
+        <permission name="android.permission.READ_CONTACTS" fixed="false" />
+        <permission name="android.permission.WRITE_CONTACTS" fixed="false" />
+        <permission name="android.permission.READ_CALENDAR" fixed="false" />
+        <permission name="android.permission.WRITE_CALENDAR" fixed="false" />
+        <permission name="android.permission.CALL_PHONE" fixed="false" />
+        <permission name="android.permission.POST_NOTIFICATIONS" fixed="false" />
+    </exception>
+    <!-- G9: the gallery. -->
+    <exception package="io.github.ninetailsflip.g9">
+        <permission name="android.permission.READ_MEDIA_IMAGES" fixed="false" />
+        <permission name="android.permission.READ_MEDIA_VIDEO" fixed="false" />
+        <permission name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" fixed="false" />
+    </exception>
+    <!-- K9: the keyboard; voice input and the dictionaries' import and export. -->
+    <exception package="io.github.ninetailsflip.k9">
+        <permission name="android.permission.POST_NOTIFICATIONS" fixed="false" />
+        <permission name="android.permission.RECORD_AUDIO" fixed="false" />
+        <permission name="android.permission.WRITE_EXTERNAL_STORAGE" fixed="false" />
+    </exception>
+    <!-- L9: the launcher; the calendar on the home screen, speed dial. -->
+    <exception package="io.github.ninetailsflip.l9">
+        <permission name="android.permission.READ_CALENDAR" fixed="false" />
+        <permission name="android.permission.CALL_PHONE" fixed="false" />
+    </exception>
+    <!-- M9: messages (the SMS role grants most of these too). -->
+    <exception package="io.github.ninetailsflip.m9">
+        <permission name="android.permission.READ_SMS" fixed="false" />
+        <permission name="android.permission.RECEIVE_SMS" fixed="false" />
+        <permission name="android.permission.RECEIVE_MMS" fixed="false" />
+        <permission name="android.permission.SEND_SMS" fixed="false" />
+        <permission name="android.permission.READ_CONTACTS" fixed="false" />
+        <permission name="android.permission.READ_PHONE_STATE" fixed="false" />
+        <permission name="android.permission.CALL_PHONE" fixed="false" />
+        <permission name="android.permission.POST_NOTIFICATIONS" fixed="false" />
+    </exception>
+    <!-- P9: the phone (the dialer role grants most of these too). -->
+    <exception package="io.github.ninetailsflip.p9">
+        <permission name="android.permission.READ_CONTACTS" fixed="false" />
+        <permission name="android.permission.READ_CALL_LOG" fixed="false" />
+        <permission name="android.permission.WRITE_CALL_LOG" fixed="false" />
+        <permission name="android.permission.CALL_PHONE" fixed="false" />
+        <permission name="android.permission.POST_NOTIFICATIONS" fixed="false" />
+    </exception>
+    <!-- TG9: Telegram; its notifications, voice messages, photos and videos to send. -->
+    <exception package="io.github.ninetailsflip.tg9">
+        <permission name="android.permission.POST_NOTIFICATIONS" fixed="false" />
+        <permission name="android.permission.RECORD_AUDIO" fixed="false" />
+        <permission name="android.permission.READ_MEDIA_IMAGES" fixed="false" />
+        <permission name="android.permission.READ_MEDIA_VIDEO" fixed="false" />
+        <permission name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" fixed="false" />
+    </exception>
+</exceptions>
