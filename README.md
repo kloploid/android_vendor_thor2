@@ -192,9 +192,11 @@ The order that works on thor2 (active slot `b`):
 2. If `super` has no room for the system image, delete the stock `product_b` (and any leftover
    `*-cow` partitions): `fastboot delete-logical-partition product_b`. The GSI has its own
    `/product` inside system, and its `skip_mount.cfg` skips mounting the partition.
-3. Flash the 64-bit vendor: `fastboot flash vendor vendor_stage2.img` (the stock 32-bit vendor
+3. Flash the 64-bit vendor: `fastboot flash vendor vendor_stage3.img` (the stock 32-bit vendor
    can't run an arm64 GSI). It carries another phone's proprietary GPU libraries, so it isn't in
-   this repository.
+   this repository. Stage 3 is stage 2 with one change to the vendor's SELinux policy:
+   `system_app` joins `hal_presentation_client` next to `system_server`, so ThorSubScreen may
+   talk to the outer screen's HAL; on stage 2 the outer screen stays dark.
 4. Flash the system: `fastboot flash system <image>`.
 5. Reboot to the bootloader (`fastboot reboot bootloader`), then disable verification and wipe
    there — fastbootd on this phone has no Fastboot HAL, so `-w` doesn't work in it:
