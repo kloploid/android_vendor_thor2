@@ -218,6 +218,7 @@ Don't use `adb root` on this build: it drops USB until the next restart.
 | | `0005` PhoneWindowManager: open the launcher's own recents screen | The Recents key starts the activity `ro.config.thor2_recents` names (L9's), since SystemUI has no Quickstep to show them |
 | | `0006` SystemUI: let the thor2 lock screen app dismiss the keyguard | KeyguardViewMediator finishes the keyguard on `org.thor2.keyguard.action.UNLOCK` from an app holding `ACCESS_KEYGUARD_SECURE_STORAGE` (signature-only): Lock, after it checked the PIN |
 | | `0007` PhoneWindowManager: Home does nothing on the thor2 lock screen | With `ro.config.thor2_lockscreen`'s app focused over the keyguard, Home is ignored instead of uncovering the stock keyguard |
+| | `0008` thor2: long-press Menu opens recents again | Android 16's `KeyGestureController` passed Menu straight to the app, so Lineage's long-press action (`config_longPressOnMenuBehavior`) never ran; it now reaches `PhoneWindowManager`. On the lock screen Menu stays with the app and recents don't open |
 | `packages/apps/Launcher3` | `0001` keypad navigation for thor2 flip phone | Moving around the launcher with the keypad (kept for builds that still include Launcher3; this image uses L9) |
 
 `patches/apply.sh` applies them with `git am`, skipping any already applied, so it's safe to re-run.

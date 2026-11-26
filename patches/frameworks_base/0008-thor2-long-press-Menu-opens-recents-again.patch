@@ -1,0 +1,71 @@
+From 94f58d378ee36ce300533710023e9bdbe11b8383 Mon Sep 17 00:00:00 2001
+From: kloploid <10303425+kloploid@users.noreply.github.com>
+Date: Thu, 26 Nov 2026 13:08:16 +0200
+Subject: [PATCH] thor2: long-press Menu opens recents again
+
+On Android 16 every key passes KeyGestureController first, and it answered
+KEYCODE_MENU with "not consumed" so the app got it, assuming the policy had
+handled it while queueing. Lineage handles Menu (press and long-press
+actions, config_longPressOnMenuBehavior) in
+PhoneWindowManager.interceptSystemKeysAndShortcuts, reached only through
+interceptKeyBeforeDispatching, so the long-press action never ran. Route
+Menu there.
+
+While the keyguard is showing, even occluded by the lock screen app, a call
+or an alarm, Menu goes to that app, and the thor2 recents screen does not
+open.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Change-Id: I84cbed6aeb909fb5a376ea80db57585658d46e7e
+---
+ .../com/android/server/input/KeyGestureController.java    | 5 ++++-
+ .../com/android/server/policy/PhoneWindowManager.java     | 8 +++++++-
+ 2 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/services/core/java/com/android/server/input/KeyGestureController.java b/services/core/java/com/android/server/input/KeyGestureController.java
+index b8e10e5bc..3a607b6b8 100644
+--- a/services/core/java/com/android/server/input/KeyGestureController.java
++++ b/services/core/java/com/android/server/input/KeyGestureController.java
+@@ -914,9 +914,12 @@ final class KeyGestureController {
+                 }
+                 break;
+             case KeyEvent.KEYCODE_ASSIST:
+-            case KeyEvent.KEYCODE_MENU:
+                 // Let policy handle it in PhoneWindowManager.interceptKeyBeforeQueueing
+                 return false;
++            case KeyEvent.KEYCODE_MENU:
++                // Lineage's Menu press and long-press actions live in
++                // PhoneWindowManager.interceptSystemKeysAndShortcuts, which only runs from here.
++                return mWindowManagerCallbacks.interceptKeyBeforeDispatching(focusedToken, event);
+             case KeyEvent.KEYCODE_VOICE_ASSIST:
+                 Slog.wtf(TAG, "KEYCODE_VOICE_ASSIST should be handled in"
+                         + " interceptKeyBeforeQueueing");
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index 83ff40efb..3b83763be 100644
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -3926,7 +3926,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+             case KeyEvent.KEYCODE_HOME:
+                 return handleHomeShortcuts(focusedToken, event);
+             case KeyEvent.KEYCODE_MENU:
+-                if (virtualKey || keyguardOn) {
++                // thor2: also while an app shows over the keyguard (the lock screen app, a call,
++                // an alarm) — Menu belongs to it, and recents must not open over the lock.
++                if (virtualKey || keyguardOn || isKeyguardShowing()) {
+                     // Let the app handle the key
+                     return false;
+                 }
+@@ -5058,6 +5060,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         if (recents == null) {
+             return false;
+         }
++        if (isKeyguardShowing()) {
++            // Locked, even with the lock screen app over the keyguard: no recents.
++            return true;
++        }
+         Intent intent = new Intent(Intent.ACTION_MAIN)
+                 .setComponent(recents)
+                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+-- 
+2.43.0
+
