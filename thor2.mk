@@ -30,7 +30,9 @@ PRODUCT_PACKAGES += \
 
 # Экран блокировки в стиле Nine (lock9) поверх keyguard: PIN проверяет сам, через LockSettingsService,
 # а keyguard снимает SystemUI по его сигналу (patches/frameworks_base 0006). «Домой» на нём ничего
-# не делает (0007, по ro.config.thor2_lockscreen). Без него — обычный экран блокировки.
+# не делает (0007, по ro.config.thor2_lockscreen). Всё, что открыло бы стоковый keyguard или bouncer
+# («Домой» над камерой, requestDismissKeyguard из приложения поверх блокировки), открывает его (0009).
+# Без него — обычный экран блокировки.
 PRODUCT_PACKAGES += \
     NineLock
 
@@ -51,3 +53,8 @@ PRODUCT_SYSTEM_PROPERTIES += \
 # компонент — config_recentsComponentName (overlay/framework).
 PRODUCT_SYSTEM_PROPERTIES += \
     ro.config.thor2_recents=io.github.ninetailsflip.l9/life.furrer.l9.RecentsActivity
+
+# Шторка: уведомления и быстрые настройки — экран Settings (settings9), а не панель SystemUI, которой
+# без сенсора не пользоваться. Его открывают долгое «Домой» и expand/togglePanel (frameworks_base 0010).
+PRODUCT_SYSTEM_PROPERTIES += \
+    ro.config.thor2_shade=io.github.ninetailsflip.settings/.ShadeActivity

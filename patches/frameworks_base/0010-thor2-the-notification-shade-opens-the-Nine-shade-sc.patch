@@ -1,0 +1,123 @@
+From 28cb49fe320f678e450829de06cbc3a10b42fcf6 Mon Sep 17 00:00:00 2001
+From: kloploid <10303425+kloploid@users.noreply.github.com>
+Date: Thu, 26 Nov 2026 16:14:06 +0200
+Subject: [PATCH 2/2] thor2: the notification shade opens the Nine shade screen
+
+With ro.config.thor2_shade naming an activity, expandNotificationsPanel,
+togglePanel (long press Home, the notification key) and
+expandSettingsPanel start that screen - notifications and quick settings
+for the keypad - instead of SystemUI's panel, which a phone without a
+touchscreen can't use. togglePanel asks the screen to close when it's
+open. While locked nothing opens: the lock screen app shows the
+notifications.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Change-Id: I1301c02a5a76ffa1b452928941d84b28c541bfbb
+---
+ .../statusbar/StatusBarManagerService.java    | 48 +++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+
+diff --git a/services/core/java/com/android/server/statusbar/StatusBarManagerService.java b/services/core/java/com/android/server/statusbar/StatusBarManagerService.java
+index b4485236a..696bd5614 100644
+--- a/services/core/java/com/android/server/statusbar/StatusBarManagerService.java
++++ b/services/core/java/com/android/server/statusbar/StatusBarManagerService.java
+@@ -45,6 +45,7 @@ import android.app.ActivityManager;
+ import android.app.ActivityManagerInternal;
+ import android.app.ActivityThread;
+ import android.app.ITransientNotificationCallback;
++import android.app.KeyguardManager;
+ import android.app.Notification;
+ import android.app.StatusBarManager;
+ import android.app.compat.CompatChanges;
+@@ -53,6 +54,7 @@ import android.compat.annotation.EnabledAfter;
+ import android.compat.annotation.EnabledSince;
+ import android.content.ComponentName;
+ import android.content.Context;
++import android.content.ActivityNotFoundException;
+ import android.content.Intent;
+ import android.content.om.IOverlayManager;
+ import android.content.pm.PackageManager;
+@@ -73,6 +75,7 @@ import android.media.MediaRoute2Info;
+ import android.media.session.MediaSession;
+ import android.net.Uri;
+ import android.os.Binder;
++import android.os.SystemProperties;
+ import android.os.Build;
+ import android.os.Bundle;
+ import android.os.Handler;
+@@ -1075,6 +1078,10 @@ public class StatusBarManagerService extends IStatusBarService.Stub implements D
+             return;
+         }
+ 
++        if (thor2Shade("notifications", false /* toggle */)) {
++            return;
++        }
++
+         if (mBar != null) {
+             try {
+                 mBar.animateExpandNotificationsPanel();
+@@ -1111,6 +1118,10 @@ public class StatusBarManagerService extends IStatusBarService.Stub implements D
+             return;
+         }
+ 
++        if (thor2Shade("notifications", true /* toggle */)) {
++            return;
++        }
++
+         if (mBar != null) {
+             try {
+                 mBar.toggleNotificationsPanel();
+@@ -1124,6 +1135,10 @@ public class StatusBarManagerService extends IStatusBarService.Stub implements D
+         enforceExpandStatusBar();
+         enforceValidCallingUser();
+ 
++        if (thor2Shade("settings", false /* toggle */)) {
++            return;
++        }
++
+         if (mBar != null) {
+             try {
+                 mBar.animateExpandSettingsPanel(subPanel);
+@@ -1132,6 +1147,39 @@ public class StatusBarManagerService extends IStatusBarService.Stub implements D
+         }
+     }
+ 
++    /**
++     * thor2: the notification shade and quick settings are an app's screen
++     * (ro.config.thor2_shade, an activity), not SystemUI's panel, which a phone without a
++     * touchscreen can't use. [panel] is what to open on ("notifications", "settings");
++     * [toggle] closes the screen when it's already open. While the phone is locked nothing
++     * opens: the lock screen app shows the notifications. false: no such screen.
++     */
++    private boolean thor2Shade(String panel, boolean toggle) {
++        ComponentName shade = ComponentName.unflattenFromString(
++                SystemProperties.get("ro.config.thor2_shade", ""));
++        if (shade == null) {
++            return false;
++        }
++        final long token = Binder.clearCallingIdentity();
++        try {
++            KeyguardManager keyguard = mContext.getSystemService(KeyguardManager.class);
++            if (keyguard != null && keyguard.isKeyguardLocked()) {
++                return true;
++            }
++            Intent intent = new Intent(Intent.ACTION_MAIN).setComponent(shade)
++                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
++                    .putExtra("org.thor2.shade.extra.PANEL", panel)
++                    .putExtra("org.thor2.shade.extra.TOGGLE", toggle);
++            mContext.startActivityAsUser(intent, UserHandle.CURRENT);
++            return true;
++        } catch (ActivityNotFoundException | SecurityException e) {
++            Slog.w(TAG, "thor2: no shade screen " + shade, e);
++            return false;
++        } finally {
++            Binder.restoreCallingIdentity(token);
++        }
++    }
++
+     public void addTile(ComponentName component) {
+         addQsTileToFrontOrEnd(component, false);
+     }
+-- 
+2.43.0
+
