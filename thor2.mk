@@ -58,3 +58,8 @@ PRODUCT_SYSTEM_PROPERTIES += \
 # без сенсора не пользоваться. Его открывают долгое «Домой» и expand/togglePanel (frameworks_base 0010).
 PRODUCT_SYSTEM_PROPERTIES += \
     ro.config.thor2_shade=io.github.ninetailsflip.settings/.ShadeActivity
+
+# Статус-бар: строка Settings (StatusBarService) поверх строки SystemUI, всегда показана; система
+# держит сервис запущенным, как SystemUI, а панель SystemUI не открывается никак (frameworks_base 0011).
+PRODUCT_SYSTEM_PROPERTIES += \
+    ro.config.thor2_statusbar=io.github.ninetailsflip.settings/.StatusBarService

@@ -17,8 +17,8 @@ screen.
   normally block it.
 - **The Nine apps built in:** launcher and Recents (L9), phone (P9), messages (M9), calendars and
   contacts (C9), gallery (G9), Telegram (TG9), keyboard (K9).
-- **The system in the Nine look:** first-time setup (Setup), Settings, the notification shade
-  and quick settings (in Settings), the lock screen (Lock); dark theme, monospace font and black
+- **The system in the Nine look:** first-time setup (Setup), Settings, the status bar, the
+  notification shade and quick settings (in Settings), the lock screen (Lock); dark theme, monospace font and black
   surfaces for what's left of AOSP.
 
 ## Device
@@ -137,7 +137,7 @@ vendor/thor2/
 | [K9](https://github.com/NineTailsFlip/k9) | Keyboard (Traditional T9 on nine-core), the keyboard in use from the first screen |
 | [Setup](https://github.com/NineTailsFlip/setup9) | The first-time setup, in place of LineageSetupWizard: language, Wi-Fi, K9's layouts, date and time, PIN, and the look of every Nine app |
 | [Lock](https://github.com/NineTailsFlip/lock9) | The lock screen in the Nine look, over the keyguard (which stays the security boundary): it checks the PIN itself and SystemUI finishes the keyguard on its signal (patch `0006`); whatever would show the stock keyguard or bouncer shows it instead (`0009`) |
-| [Settings](https://github.com/NineTailsFlip/settings9) | The phone's settings in the Nine look; it answers `android.settings.*` above the stock Settings app, which stays, without its icon, for the system's own dialogs and the pages not ported yet. Also the notification shade and quick settings (`ro.config.thor2_shade`, patch `0010`) |
+| [Settings](https://github.com/NineTailsFlip/settings9) | The phone's settings in the Nine look; it answers `android.settings.*` above the stock Settings app, which stays, without its icon, for the system's own dialogs and the pages not ported yet. Also the status bar, always shown, with new notifications on its line in place of SystemUI's pop-ups (`ro.config.thor2_statusbar`, patch `0011`), and the notification shade and quick settings (`ro.config.thor2_shade`, patch `0010`) |
 
 `apps/fetch.py` downloads each app's latest GitHub release into `apps/prebuilt/` (git-ignored)
 and checks it against the release's `update.json`. For TG9 it takes the `arm64-v8a` APK. The
@@ -225,6 +225,7 @@ Don't use `adb root` on this build: it drops USB until the next restart.
 | | `0008` thor2: long-press Menu opens recents again | Android 16's `KeyGestureController` passed Menu straight to the app, so Lineage's long-press action (`config_longPressOnMenuBehavior`) never ran; it now reaches `PhoneWindowManager`. On the lock screen Menu stays with the app and recents don't open |
 | | `0009` thor2: every way back to the keyguard leads to the lock screen app | When the keyguard is uncovered with the screen on (Home over the secure camera, an app over it finishing), SystemUI starts Lock again; when an app over the keyguard asks to dismiss it, Lock takes the PIN instead of the bouncer and its unlock answers the request. Home over such an app starts Lock, which goes home once unlocked. Lock itself asking (a pattern or password) still gets the stock bouncer |
 | | `0010` thor2: the notification shade opens the Nine shade screen | `expandNotificationsPanel`, `togglePanel` (long press Home) and `expandSettingsPanel` start the activity `ro.config.thor2_shade` names (Settings' shade) instead of SystemUI's panel; nothing opens while locked |
+| | `0011` thor2: the status bar is an app's, always shown; SystemUI's panel never opens | The status bar is always shown (`InsetsPolicy`: no app hides it, every app's content stays below it); the system binds `ro.config.thor2_statusbar` (Settings' bar) after SystemUI and keeps it bound; with `ro.config.thor2_shade`, SystemUI's panel and quick settings are always disabled, so a swipe on the touchscreen doesn't open the stock shade either |
 | `packages/apps/Launcher3` | `0001` keypad navigation for thor2 flip phone | Moving around the launcher with the keypad (kept for builds that still include Launcher3; this image uses L9) |
 
 `patches/apply.sh` applies them with `git am`, skipping any already applied, so it's safe to re-run.

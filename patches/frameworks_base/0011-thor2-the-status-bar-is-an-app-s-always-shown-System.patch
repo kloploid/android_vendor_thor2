@@ -1,0 +1,187 @@
+From ef5e3e1a1526ab9054d712ed649ced221ce76458 Mon Sep 17 00:00:00 2001
+From: kloploid <10303425+kloploid@users.noreply.github.com>
+Date: Thu, 26 Nov 2026 20:47:15 +0200
+Subject: [PATCH] thor2: the status bar is an app's, always shown; SystemUI's
+ panel never opens
+
+With ro.config.thor2_statusbar (a service, NineSettings' StatusBarService):
+- InsetsPolicy shows the status bar forcibly: no app can hide it, and every
+  app's content stays below it.
+- SystemServer binds the service right after starting SystemUI and keeps it
+  bound (important, foreground), binding again after its app is updated.
+
+With ro.config.thor2_shade, StatusBarManagerService always disables
+SystemUI's panel and quick settings (DISABLE_EXPAND, DISABLE2_NOTIFICATION_SHADE,
+DISABLE2_QUICK_SETTINGS): a swipe on the touchscreen no longer opens the stock
+shade either. The shade is the app's screen (0010).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Change-Id: I07266286bbd353280d3d3a80582607074bf06e3f
+---
+ .../statusbar/StatusBarManagerService.java    | 18 +++++-
+ .../com/android/server/wm/InsetsPolicy.java   |  9 +++
+ .../java/com/android/server/SystemServer.java | 57 +++++++++++++++++++
+ 3 files changed, 81 insertions(+), 3 deletions(-)
+
+diff --git a/services/core/java/com/android/server/statusbar/StatusBarManagerService.java b/services/core/java/com/android/server/statusbar/StatusBarManagerService.java
+index 696bd5614..e296a3890 100644
+--- a/services/core/java/com/android/server/statusbar/StatusBarManagerService.java
++++ b/services/core/java/com/android/server/statusbar/StatusBarManagerService.java
+@@ -1703,6 +1703,18 @@ public class StatusBarManagerService extends IStatusBarService.Stub implements D
+         return state;
+     }
+ 
++    /**
++     * thor2: with the shade an app's screen (ro.config.thor2_shade), SystemUI's own panel and
++     * quick settings never open, not even by a swipe on the status bar: these are always
++     * disabled, whoever asks for what.
++     */
++    private static final boolean THOR2_SHADE =
++            !SystemProperties.get("ro.config.thor2_shade", "").isEmpty();
++    private static final int THOR2_DISABLED1 = THOR2_SHADE ? StatusBarManager.DISABLE_EXPAND : 0;
++    private static final int THOR2_DISABLED2 = THOR2_SHADE
++            ? StatusBarManager.DISABLE2_NOTIFICATION_SHADE | StatusBarManager.DISABLE2_QUICK_SETTINGS
++            : 0;
++
+     private static class UiState {
+         private @Appearance int mAppearance = 0;
+         private AppearanceRegion[] mAppearanceRegions = new AppearanceRegion[0];
+@@ -1711,8 +1723,8 @@ public class StatusBarManagerService extends IStatusBarService.Stub implements D
+         private @Behavior int mBehavior;
+         private @InsetsType int mRequestedVisibleTypes = WindowInsets.Type.defaultVisible();
+         private String mPackageName = "none";
+-        private int mDisabled1 = 0;
+-        private int mDisabled2 = 0;
++        private int mDisabled1 = THOR2_DISABLED1;
++        private int mDisabled2 = THOR2_DISABLED2;
+         @ImeWindowVisibility
+         private int mImeWindowVis = 0;
+         @BackDispositionMode
+@@ -2930,7 +2942,7 @@ public class StatusBarManagerService extends IStatusBarService.Stub implements D
+     int gatherDisableActionsLocked(int userId, int which) {
+         final int N = mDisableRecords.size();
+         // gather the new net flags
+-        int net = 0;
++        int net = which == 1 ? THOR2_DISABLED1 : THOR2_DISABLED2;
+         for (int i=0; i<N; i++) {
+             final DisableRecord rec = mDisableRecords.get(i);
+             if (rec.userId == userId) {
+diff --git a/services/core/java/com/android/server/wm/InsetsPolicy.java b/services/core/java/com/android/server/wm/InsetsPolicy.java
+index 0a92eea02..f9a5cb049 100644
+--- a/services/core/java/com/android/server/wm/InsetsPolicy.java
++++ b/services/core/java/com/android/server/wm/InsetsPolicy.java
+@@ -36,6 +36,7 @@ import android.content.ComponentName;
+ import android.content.res.Resources;
+ import android.os.Handler;
+ import android.os.IBinder;
++import android.os.SystemProperties;
+ import android.util.SparseArray;
+ import android.view.InsetsController;
+ import android.view.InsetsFrameProvider;
+@@ -769,6 +770,13 @@ class InsetsPolicy {
+                 component, requestVisibleTypes);
+     }
+ 
++    /**
++     * thor2: the status bar is an app's (ro.config.thor2_statusbar) and always shown: an app
++     * can't hide it, and every app's content stays below it (forced consuming, below).
++     */
++    private static final boolean THOR2_STATUS_BAR =
++            !SystemProperties.get("ro.config.thor2_statusbar", "").isEmpty();
++
+     boolean areTypesForciblyShown(@InsetsType int types) {
+         return (mForciblyShowingTypes & types) == types;
+     }
+@@ -786,6 +794,7 @@ class InsetsPolicy {
+                 (forceShowingNavigationBars(win)
+                         ? Type.navigationBars()
+                         : 0)
++                | (THOR2_STATUS_BAR ? Type.statusBars() : 0)
+                 | (hasDisplayOverride
+                         // Add types forcibly shown by the display if there is any.
+                         ? displayForciblyShowingTypes
+diff --git a/services/java/com/android/server/SystemServer.java b/services/java/com/android/server/SystemServer.java
+index a184d6a7e..718003e91 100644
+--- a/services/java/com/android/server/SystemServer.java
++++ b/services/java/com/android/server/SystemServer.java
+@@ -46,6 +46,7 @@ import android.content.ComponentName;
+ import android.content.ContentResolver;
+ import android.content.Context;
+ import android.content.Intent;
++import android.content.ServiceConnection;
+ import android.content.pm.PackageItemInfo;
+ import android.content.pm.PackageManager;
+ import android.content.pm.PackageManagerInternal;
+@@ -84,6 +85,7 @@ import android.os.SystemProperties;
+ import android.os.Trace;
+ import android.os.UserHandle;
+ import android.os.UserManager;
++import android.os.Handler;
+ import android.os.storage.IStorageManager;
+ import android.provider.DeviceConfig;
+ import android.provider.Settings;
+@@ -3777,6 +3779,61 @@ public final class SystemServer implements Dumpable {
+         //Slog.d(TAG, "Starting service: " + intent);
+         context.startServiceAsUser(intent, UserHandle.SYSTEM);
+         windowManager.onSystemUiStarted();
++        startThor2StatusBar(context);
++    }
++
++    /**
++     * thor2: the status bar is an app's service (ro.config.thor2_statusbar), kept running like
++     * SystemUI: bound from boot (it's direct-boot aware), important, and bound again when its
++     * app is updated or can't be bound yet.
++     */
++    private static void startThor2StatusBar(Context context) {
++        final ComponentName bar = ComponentName.unflattenFromString(
++                SystemProperties.get("ro.config.thor2_statusbar", ""));
++        if (bar == null) {
++            return;
++        }
++        final Handler handler = new Handler(Looper.getMainLooper());
++        final ServiceConnection connection = new ServiceConnection() {
++            @Override
++            public void onServiceConnected(ComponentName name, IBinder service) {
++                Slog.i(TAG, "thor2: status bar " + name + " running");
++            }
++
++            @Override
++            public void onServiceDisconnected(ComponentName name) {
++                // The binding restarts it by itself.
++            }
++
++            @Override
++            public void onBindingDied(ComponentName name) {
++                Slog.w(TAG, "thor2: status bar " + name + " gone; binding it again");
++                context.unbindService(this);
++                handler.postDelayed(() -> bindThor2StatusBar(context, bar, this, handler), 1000);
++            }
++        };
++        bindThor2StatusBar(context, bar, connection, handler);
++    }
++
++    private static void bindThor2StatusBar(Context context, ComponentName bar,
++            ServiceConnection connection, Handler handler) {
++        final Intent intent = new Intent().setComponent(bar);
++        boolean bound = false;
++        try {
++            bound = context.bindServiceAsUser(intent, connection,
++                    Context.BIND_AUTO_CREATE | Context.BIND_IMPORTANT
++                            | Context.BIND_FOREGROUND_SERVICE, UserHandle.SYSTEM);
++        } catch (SecurityException e) {
++            Slog.w(TAG, "thor2: can't bind the status bar " + bar, e);
++        }
++        if (!bound) {
++            try {
++                context.unbindService(connection);
++            } catch (IllegalArgumentException e) {
++                // Not registered: nothing to release.
++            }
++            handler.postDelayed(() -> bindThor2StatusBar(context, bar, connection, handler), 5000);
++        }
+     }
+ 
+     /**
+-- 
+2.43.0
+
