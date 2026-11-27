@@ -1,0 +1,54 @@
+From c6e2e52a452c3ad2e5a612dbfd57285b5beeccdf Mon Sep 17 00:00:00 2001
+From: kloploid <10303425+kloploid@users.noreply.github.com>
+Date: Fri, 27 Nov 2026 13:40:14 +0200
+Subject: [PATCH] thor2: long press Home opens the Nine shade again
+
+Patch 0011 keeps SystemUI's panel disabled (DISABLE2_NOTIFICATION_SHADE),
+and togglePanel and expandNotificationsPanel returned on that flag
+before reaching the Nine shade (patch 0010): long press Home, the
+notification key and apps expanding the status bar opened nothing. The
+Nine shade now comes first; SystemUI's panel stays disabled.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Change-Id: Ic27b23fb78265376a0630daf0834a1edc419df70
+---
+ .../server/statusbar/StatusBarManagerService.java      | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/services/core/java/com/android/server/statusbar/StatusBarManagerService.java b/services/core/java/com/android/server/statusbar/StatusBarManagerService.java
+index e296a3890..cac0c6afb 100644
+--- a/services/core/java/com/android/server/statusbar/StatusBarManagerService.java
++++ b/services/core/java/com/android/server/statusbar/StatusBarManagerService.java
+@@ -1074,11 +1074,12 @@ public class StatusBarManagerService extends IStatusBarService.Stub implements D
+         enforceExpandStatusBar();
+         enforceValidCallingUser();
+ 
+-        if (isDisable2FlagSet(DISABLE2_NOTIFICATION_SHADE)) {
++        // thor2: the Nine shade opens though SystemUI's panel is disabled (patch 0011).
++        if (thor2Shade("notifications", false /* toggle */)) {
+             return;
+         }
+ 
+-        if (thor2Shade("notifications", false /* toggle */)) {
++        if (isDisable2FlagSet(DISABLE2_NOTIFICATION_SHADE)) {
+             return;
+         }
+ 
+@@ -1114,11 +1115,12 @@ public class StatusBarManagerService extends IStatusBarService.Stub implements D
+             return;
+         }
+ 
+-        if (isDisable2FlagSet(DISABLE2_NOTIFICATION_SHADE)) {
++        // thor2: the Nine shade opens though SystemUI's panel is disabled (patch 0011).
++        if (thor2Shade("notifications", true /* toggle */)) {
+             return;
+         }
+ 
+-        if (thor2Shade("notifications", true /* toggle */)) {
++        if (isDisable2FlagSet(DISABLE2_NOTIFICATION_SHADE)) {
+             return;
+         }
+ 
+-- 
+2.43.0
+
