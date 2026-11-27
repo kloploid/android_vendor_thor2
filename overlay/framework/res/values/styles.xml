@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Текст тоста: моноширинный (config_bodyFontFamily), белый, вместо переменного шрифта
-         редизайна уведомлений. -->
-    <style name="TextAppearance.Toast">
+         редизайна уведомлений. Родитель явно: в overlay имя с точкой искало бы TextAppearance
+         в самом overlay. -->
+    <style name="TextAppearance.Toast" parent="@android:style/TextAppearance">
         <item name="android:fontFamily">monospace</item>
         <item name="android:textSize">14sp</item>
         <item name="android:lineHeight">20sp</item>
