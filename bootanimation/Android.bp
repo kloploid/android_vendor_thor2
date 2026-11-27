@@ -1,9 +1,0 @@
-// The boot animation in the Nine look (make.py builds bootanimation.zip), in place of Lineage's.
-// Lineage's bootanimation-dark.zip, a link to bootanimation.zip, shows it too.
-prebuilt_media {
-    name: "thor2-bootanimation",
-    src: "bootanimation.zip",
-    filename: "bootanimation.zip",
-    product_specific: true,
-    overrides: ["bootanimation.zip"],
-}

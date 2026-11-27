@@ -24,9 +24,9 @@ PRODUCT_PACKAGES += \
     default-permissions-nine.xml \
     sysconfig-nine.xml
 
-# Загрузочная анимация в стиле Nine (bootanimation/make.py) вместо лайнежевской.
-PRODUCT_PACKAGES += \
-    thor2-bootanimation
+# Загрузочная анимация в стиле Nine (bootanimation/make.py) вместо лайнежевской: модуль Lineage
+# bootanimation.zip (и ссылка bootanimation-dark.zip) берёт готовый файл вместо своего (путь от корня).
+TARGET_BOOTANIMATION := vendor/thor2/bootanimation/bootanimation.zip
 
 # Первая настройка в стиле Nine вместо LineageSetupWizard (apps/Android.bp: overrides). Шрифт и
 # полосу подсказок, выбранные в ней, подхватывают все приложения Nine (nine-core SetupChoices);
